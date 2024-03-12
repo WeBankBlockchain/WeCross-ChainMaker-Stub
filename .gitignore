@@ -22,3 +22,33 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+### Gradle template
+.gradle
+/build/
+src/integTest/resources/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+gradle.properties
+gpg
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Cache of project
+.gradletasknamecache
+
+# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
+# gradle/wrapper/gradle-wrapper.properties
+
+/.idea/
+/dist/
+out/
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ignore temp file for liquid contract
+.vscode/
+target/
