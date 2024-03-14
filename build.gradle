@@ -79,6 +79,8 @@ dependencies {
         exclude group: 'org.fisco-bcos', module: 'tcnative'
     }
 
+    implementation 'org.chainmaker:chainmaker-sdk-java:2.3.2'
+
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13.2'
 

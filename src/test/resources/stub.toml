@@ -1,0 +1,28 @@
+[common]
+    name = 'chainmaker'
+    type = 'PK'
+[chain]
+    chainId = 'pkchain01'
+    signKeyPath = 'sign.key'
+    authType = 'public'
+    [chain.crypto]
+        hash = "SHA256"
+    [[chain.nodes]]
+        nodeAddr = "172.30.34.199:13001"
+    [[chain.nodes]]
+        nodeAddr = "172.30.34.199:13002"
+    [[chain.nodes]]
+        nodeAddr = "172.30.34.199:13003"
+    [[chain.nodes]]
+        nodeAddr = "172.30.34.199:13004"
+    [chain.rpcClient]
+        maxReceiveMessageSize = 100
+
+[[resources]]
+    name = 'WeCrossProxy'
+    type = 'CM_CONTRACT'
+    value = '1'
+[[resources]]
+    name = 'WeCrossHub'
+    type = 'CM_CONTRACT'
+    value = '2'
