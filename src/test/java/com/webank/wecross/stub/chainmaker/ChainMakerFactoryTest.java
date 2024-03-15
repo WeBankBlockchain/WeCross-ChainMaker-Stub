@@ -1,6 +1,5 @@
-package com.webank.wecross.stub.chainmaker.test;
+package com.webank.wecross.stub.chainmaker;
 
-import com.webank.wecross.stub.chainmaker.ChainMakerBaseFactory;
 import org.junit.Test;
 
 public class ChainMakerFactoryTest {
