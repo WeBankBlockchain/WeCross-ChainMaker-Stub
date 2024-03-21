@@ -1,4 +1,3 @@
 package com.webank.wecross.stub.chainmaker.integration;
 
-public class ChainMakerIntegrationTest {
-}
+public class ChainMakerIntegrationTest {}

@@ -1,6 +1,5 @@
 package com.webank.wecross.stub.chainmaker.client;
 
-
 import org.chainmaker.sdk.ChainClient;
 
 public abstract class AbstractClientWrapper implements ClientWrapper {
@@ -10,5 +9,4 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
     public AbstractClientWrapper(ChainClient client) {
         this.client = client;
     }
-
 }

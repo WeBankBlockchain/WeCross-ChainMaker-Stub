@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 public class ClientWrapperFactory {
     private static final Logger logger = LoggerFactory.getLogger(ClientWrapperFactory.class);
 
-    public static ClientWrapperImpl createClientWrapperInstance(ChainMakerStubConfig chainMakerStubConfig) throws Exception {
+    public static ClientWrapperImpl createClientWrapperInstance(
+            ChainMakerStubConfig chainMakerStubConfig) throws Exception {
         logger.info("ChainMakerStubConfig: {}", chainMakerStubConfig);
         ChainClient client = ClientUtility.initClient(chainMakerStubConfig);
         return new ClientWrapperImpl(client);
     }
-
 }

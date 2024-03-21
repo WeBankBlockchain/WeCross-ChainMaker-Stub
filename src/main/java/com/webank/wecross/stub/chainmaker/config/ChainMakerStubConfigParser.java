@@ -2,11 +2,10 @@ package com.webank.wecross.stub.chainmaker.config;
 
 import com.moandjiezana.toml.Toml;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerToml;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ChainMakerStubConfigParser extends AbstractChainMakerConfigParser {
 
@@ -21,6 +20,4 @@ public class ChainMakerStubConfigParser extends AbstractChainMakerConfigParser {
         Toml toml = chainMakerToml.getToml();
         return toml.to(ChainMakerStubConfig.class);
     }
-
-
 }

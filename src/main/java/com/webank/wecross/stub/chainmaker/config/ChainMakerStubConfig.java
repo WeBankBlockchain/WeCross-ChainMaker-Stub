@@ -2,12 +2,10 @@ package com.webank.wecross.stub.chainmaker.config;
 
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerConstant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ChainMakerStubConfig {
     private static final Logger logger = LoggerFactory.getLogger(Logger.class);
@@ -38,10 +36,7 @@ public class ChainMakerStubConfig {
 
         @Override
         public String toString() {
-            return "Common{" +
-                    "name='" + name + '\'' +
-                    ", type='" + type + '\'' +
-                    '}';
+            return "Common{" + "name='" + name + '\'' + ", type='" + type + '\'' + '}';
         }
     }
 
@@ -66,9 +61,7 @@ public class ChainMakerStubConfig {
 
             @Override
             public String toString() {
-                return "Crypto{" +
-                        "hash='" + hash + '\'' +
-                        '}';
+                return "Crypto{" + "hash='" + hash + '\'' + '}';
             }
         }
 
@@ -85,9 +78,7 @@ public class ChainMakerStubConfig {
 
             @Override
             public String toString() {
-                return "Node{" +
-                        "nodeAddr='" + nodeAddr + '\'' +
-                        '}';
+                return "Node{" + "nodeAddr='" + nodeAddr + '\'' + '}';
             }
         }
 
@@ -104,9 +95,11 @@ public class ChainMakerStubConfig {
 
             @Override
             public String toString() {
-                return "rpcClient{" +
-                        "maxReceiveMessageSize='" + maxReceiveMessageSize + '\'' +
-                        '}';
+                return "rpcClient{"
+                        + "maxReceiveMessageSize='"
+                        + maxReceiveMessageSize
+                        + '\''
+                        + '}';
             }
         }
 
@@ -190,11 +183,17 @@ public class ChainMakerStubConfig {
 
         @Override
         public String toString() {
-            return "Resource{" +
-                    "name='" + name + '\'' +
-                    ", type='" + type + '\'' +
-                    ", value='" + value + '\'' +
-                    '}';
+            return "Resource{"
+                    + "name='"
+                    + name
+                    + '\''
+                    + ", type='"
+                    + type
+                    + '\''
+                    + ", value='"
+                    + value
+                    + '\''
+                    + '}';
         }
     }
 
@@ -229,8 +228,16 @@ public class ChainMakerStubConfig {
             resourceInfo.setName(resource.getName());
             resourceInfo.setStubType(this.getCommon().getType());
             resourceInfo.getProperties().put(resource.getName(), resource.getValue());
-            resourceInfo.getProperties().put(ChainMakerConstant.CHAIN_MAKER_PROPERTY_CHAIN_ID, this.getChain().getChainId());
-            resourceInfo.getProperties().put(ChainMakerConstant.CHAIN_MAKER_PROPERTY_AUTH_TYPE, this.getChain().getAuthType());
+            resourceInfo
+                    .getProperties()
+                    .put(
+                            ChainMakerConstant.CHAIN_MAKER_PROPERTY_CHAIN_ID,
+                            this.getChain().getChainId());
+            resourceInfo
+                    .getProperties()
+                    .put(
+                            ChainMakerConstant.CHAIN_MAKER_PROPERTY_AUTH_TYPE,
+                            this.getChain().getAuthType());
             resourceInfos.add(resourceInfo);
         }
         logger.info(" resource list: {}", resourceInfos);

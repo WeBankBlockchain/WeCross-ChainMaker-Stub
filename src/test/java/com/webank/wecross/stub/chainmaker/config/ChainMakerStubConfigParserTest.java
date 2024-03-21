@@ -1,19 +1,19 @@
 package com.webank.wecross.stub.chainmaker.config;
 
-import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
-
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import org.junit.Test;
+
 public class ChainMakerStubConfigParserTest {
     @Test
     public void stubConfigParserTest() throws IOException {
-        ChainMakerStubConfigParser chainMakerStubConfigParser = new ChainMakerStubConfigParser("./", "stub.toml");
+        ChainMakerStubConfigParser chainMakerStubConfigParser =
+                new ChainMakerStubConfigParser("./", "stub.toml");
         ChainMakerStubConfig chainMakerStubConfig = chainMakerStubConfigParser.loadConfig();
 
         ChainMakerStubConfig.Common common = chainMakerStubConfig.getCommon();
@@ -43,6 +43,5 @@ public class ChainMakerStubConfigParserTest {
         assertEquals(resources.get(1).getName(), "WeCrossHub");
         assertEquals(resources.get(1).getType(), "CM_CONTRACT");
         assertEquals(resources.get(1).getValue(), "2");
-
     }
 }

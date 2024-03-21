@@ -7,10 +7,10 @@ plugins {
     id 'maven-publish'
 
     id 'org.ajoberstar.grgit' version '4.0.1'
-    id 'com.github.sherter.google-java-format' version '0.8'
+    id 'com.diffplug.spotless' version '6.13.0'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
-
+apply plugin: 'com.diffplug.spotless'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
@@ -28,17 +28,27 @@ repositories {
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 }
 
-googleJavaFormat {
-    options style: 'AOSP'
-    source = sourceSets*.allJava
-    include '**/*.java'
-    exclude '**/temp/*.java'
+spotless {
+    java {
+        target 'src/*/java/**/*.java'
+        removeUnusedImports()
+        googleJavaFormat().aosp()
+    }
+
+    format 'misc', {
+        target '**/*.gradle', '**/*.md', '**/.gitignore'
+    }
+    format 'xml', {
+        target '**/*.xml'
+    }
 }
 
-verifyGoogleJavaFormat {
-    source = sourceSets*.allJava
-    include '**/*.java'
-    exclude '**/temp/*.java'
+task copyHooks(type: Copy) {
+    println 'copyHooks task'
+    from("hooks") {
+        include "**"
+    }
+    into ".git/hooks"
 }
 
 configurations {
@@ -62,7 +72,7 @@ configurations.all {
     exclude group: 'org.yaml', module: 'snakeyaml'
 }
 
-def log4j_version= '2.22.1'
+def log4j_version = '2.22.1'
 List logger = [
         "org.apache.logging.log4j:log4j-api:$log4j_version",
         "org.apache.logging.log4j:log4j-core:$log4j_version",
@@ -74,10 +84,11 @@ List logger = [
 
 dependencies {
     compile logger
-    implementation ('com.webank:wecross-java-stub:1.4.0') {
+    implementation('com.webank:wecross-java-stub:1.4.0') {
         exclude group: "io.netty"
         exclude group: 'org.fisco-bcos', module: 'tcnative'
     }
+    compile('org.fisco-bcos.java-sdk:fisco-bcos-sdk-abi:2.10.0-SNAPSHOT')
 
     implementation 'org.chainmaker:chainmaker-sdk-java:2.3.2'
 
@@ -116,6 +127,7 @@ sourceSets {
 }
 
 shadowJar {
+    dependsOn(copyHooks)
     mergeServiceFiles()
     minimize()
 }
@@ -206,11 +218,11 @@ jacocoTestReport {
 
 ext {
     if (!project.hasProperty("NEXUS_USERNAME")) {
-        NEXUS_USERNAME="xxx"
+        NEXUS_USERNAME = "xxx"
     }
 
     if (!project.hasProperty("NEXUS_PASSWORD")) {
-        NEXUS_PASSWORD="xxx"
+        NEXUS_PASSWORD = "xxx"
     }
 }
 

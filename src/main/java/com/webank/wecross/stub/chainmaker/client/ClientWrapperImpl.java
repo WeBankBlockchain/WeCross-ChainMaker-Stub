@@ -1,6 +1,5 @@
 package com.webank.wecross.stub.chainmaker.client;
 
-
 import org.chainmaker.sdk.ChainClient;
 
 public class ClientWrapperImpl extends AbstractClientWrapper {
