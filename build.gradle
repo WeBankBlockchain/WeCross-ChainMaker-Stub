@@ -7,10 +7,10 @@ plugins {
     id 'maven-publish'
 
     id 'org.ajoberstar.grgit' version '4.0.1'
-    id 'com.github.sherter.google-java-format' version '0.8'
+    id 'com.diffplug.spotless' version '6.13.0'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
-
+apply plugin: 'com.diffplug.spotless'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
@@ -28,17 +28,27 @@ repositories {
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 }
 
-googleJavaFormat {
-    options style: 'AOSP'
-    source = sourceSets*.allJava
-    include '**/*.java'
-    exclude '**/temp/*.java'
+spotless {
+    java {
+        target 'src/*/java/**/*.java'
+        removeUnusedImports()
+        googleJavaFormat().aosp()
+    }
+
+    format 'misc', {
+        target '**/*.gradle', '**/*.md', '**/.gitignore'
+    }
+    format 'xml', {
+        target '**/*.xml'
+    }
 }
 
-verifyGoogleJavaFormat {
-    source = sourceSets*.allJava
-    include '**/*.java'
-    exclude '**/temp/*.java'
+task copyHooks(type: Copy) {
+    println 'copyHooks task'
+    from("hooks") {
+        include "**"
+    }
+    into ".git/hooks"
 }
 
 configurations {
@@ -116,6 +126,7 @@ sourceSets {
 }
 
 shadowJar {
+    dependsOn(copyHooks)
     mergeServiceFiles()
     minimize()
 }
