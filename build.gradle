@@ -72,7 +72,7 @@ configurations.all {
     exclude group: 'org.yaml', module: 'snakeyaml'
 }
 
-def log4j_version= '2.22.1'
+def log4j_version = '2.22.1'
 List logger = [
         "org.apache.logging.log4j:log4j-api:$log4j_version",
         "org.apache.logging.log4j:log4j-core:$log4j_version",
@@ -84,10 +84,11 @@ List logger = [
 
 dependencies {
     compile logger
-    implementation ('com.webank:wecross-java-stub:1.4.0') {
+    implementation('com.webank:wecross-java-stub:1.4.0') {
         exclude group: "io.netty"
         exclude group: 'org.fisco-bcos', module: 'tcnative'
     }
+    compile('org.fisco-bcos.java-sdk:fisco-bcos-sdk-abi:2.10.0-SNAPSHOT')
 
     implementation 'org.chainmaker:chainmaker-sdk-java:2.3.2'
 
@@ -217,11 +218,11 @@ jacocoTestReport {
 
 ext {
     if (!project.hasProperty("NEXUS_USERNAME")) {
-        NEXUS_USERNAME="xxx"
+        NEXUS_USERNAME = "xxx"
     }
 
     if (!project.hasProperty("NEXUS_PASSWORD")) {
-        NEXUS_PASSWORD="xxx"
+        NEXUS_PASSWORD = "xxx"
     }
 }
 
