@@ -2,7 +2,6 @@ package com.webank.wecross.stub.chainmaker.common;
 
 import com.webank.wecross.stub.StubConstant;
 
-
 public interface ChainMakerConstant {
 
     String CHAIN_MAKER_PROXY_NAME = StubConstant.PROXY_NAME;

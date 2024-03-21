@@ -2,6 +2,8 @@ package com.webank.wecross.stub.chainmaker.client;
 
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.chainmaker.config.ChainMakerStubConfig;
+import java.io.IOException;
+import java.util.List;
 import org.chainmaker.sdk.ChainClient;
 import org.chainmaker.sdk.ChainManager;
 import org.chainmaker.sdk.config.ChainClientConfig;
@@ -13,9 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-
-import java.io.IOException;
-import java.util.List;
 
 public class ClientUtility {
 
@@ -35,8 +34,8 @@ public class ClientUtility {
         return chainManager.createChainClient(sdkConfig);
     }
 
-
-    private static ChainClientConfig buildChainClientConfig(ChainMakerStubConfig.Chain chain) throws WeCrossException, IOException {
+    private static ChainClientConfig buildChainClientConfig(ChainMakerStubConfig.Chain chain)
+            throws WeCrossException, IOException {
         String chainId = chain.getChainId();
         String signKeyPath = chain.getSignKeyPath();
         String authType = chain.getAuthType();
@@ -47,11 +46,15 @@ public class ClientUtility {
         CryptoConfig cryptoConfig = new CryptoConfig();
         cryptoConfig.setHash(hash);
 
-        NodeConfig[] nodeConfigs = nodes.stream().map(s -> {
-            NodeConfig nodeConfig = new NodeConfig();
-            nodeConfig.setNodeAddr(s.getNodeAddr());
-            return nodeConfig;
-        }).toArray(NodeConfig[]::new);
+        NodeConfig[] nodeConfigs =
+                nodes.stream()
+                        .map(
+                                s -> {
+                                    NodeConfig nodeConfig = new NodeConfig();
+                                    nodeConfig.setNodeAddr(s.getNodeAddr());
+                                    return nodeConfig;
+                                })
+                        .toArray(NodeConfig[]::new);
 
         RpcClientConfig rpcClientConfig = new RpcClientConfig();
         rpcClientConfig.setMaxReceiveMessageSize(maxReceiveMessageSize);
@@ -74,5 +77,4 @@ public class ClientUtility {
 
         return chainClientConfig;
     }
-
 }
