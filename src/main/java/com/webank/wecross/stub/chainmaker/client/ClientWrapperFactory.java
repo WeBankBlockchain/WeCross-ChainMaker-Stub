@@ -12,6 +12,6 @@ public class ClientWrapperFactory {
             ChainMakerStubConfig chainMakerStubConfig) throws Exception {
         logger.info("ChainMakerStubConfig: {}", chainMakerStubConfig);
         ChainClient client = ClientUtility.initClient(chainMakerStubConfig);
-        return new ClientWrapperImpl(client);
+        return new ClientWrapperImpl(client, chainMakerStubConfig.getChain().getRpcClient());
     }
 }

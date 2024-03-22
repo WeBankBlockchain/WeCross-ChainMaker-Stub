@@ -1,13 +1,14 @@
 package com.webank.wecross.stub.chainmaker.config;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
-import org.junit.Test;
+
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 
 public class ChainMakerStubConfigParserTest {
     @Test
@@ -39,9 +40,11 @@ public class ChainMakerStubConfigParserTest {
         assertTrue(Objects.nonNull(resources) && resources.size() == 2);
         assertEquals(resources.get(0).getName(), "WeCrossProxy");
         assertEquals(resources.get(0).getType(), "CM_CONTRACT");
-        assertEquals(resources.get(0).getValue(), "1");
+        assertEquals(resources.get(0).getValue(), "a6e7603f349e13ab4d5f422a55463a845213ed5a");
+        assertEquals(resources.get(0).getPath(), "payment.cm.WeCrossProxy");
         assertEquals(resources.get(1).getName(), "WeCrossHub");
         assertEquals(resources.get(1).getType(), "CM_CONTRACT");
-        assertEquals(resources.get(1).getValue(), "2");
+        assertEquals(resources.get(1).getValue(), "737d37475b787843dbe1de942acb4bfebf5cb3e5");
+        assertEquals(resources.get(1).getPath(), "payment.cm.WeCrossHub");
     }
 }

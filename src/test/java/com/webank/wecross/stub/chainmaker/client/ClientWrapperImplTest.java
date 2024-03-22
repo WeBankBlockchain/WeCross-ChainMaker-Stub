@@ -10,7 +10,7 @@ public class ClientWrapperImplTest {
     public void clientWrapperImplTest() {
         try {
             ChainMakerStubConfigParser chainMakerStubConfigParser =
-                    new ChainMakerStubConfigParser("./", "stub.toml");
+                    new ChainMakerStubConfigParser("./", "stub-test.toml");
             ChainMakerStubConfig chainMakerStubConfig = chainMakerStubConfigParser.loadConfig();
             ClientWrapperImpl clientWrapperInstance =
                     ClientWrapperFactory.createClientWrapperInstance(chainMakerStubConfig);
