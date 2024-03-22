@@ -2,10 +2,11 @@ package com.webank.wecross.stub.chainmaker.config;
 
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerConstant;
-import java.util.ArrayList;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ChainMakerStubConfig {
     private static final Logger logger = LoggerFactory.getLogger(Logger.class);
@@ -83,7 +84,25 @@ public class ChainMakerStubConfig {
         }
 
         public static class RpcClient {
-            private int maxReceiveMessageSize;
+            private long callTimeout = 10000;
+            private long syncResultTimeout = 10000;
+            private int maxReceiveMessageSize = 100;
+
+            public long getCallTimeout() {
+                return callTimeout;
+            }
+
+            public void setCallTimeout(long callTimeout) {
+                this.callTimeout = callTimeout;
+            }
+
+            public long getSyncResultTimeout() {
+                return syncResultTimeout;
+            }
+
+            public void setSyncResultTimeout(long syncResultTimeout) {
+                this.syncResultTimeout = syncResultTimeout;
+            }
 
             public int getMaxReceiveMessageSize() {
                 return maxReceiveMessageSize;
@@ -95,11 +114,11 @@ public class ChainMakerStubConfig {
 
             @Override
             public String toString() {
-                return "rpcClient{"
-                        + "maxReceiveMessageSize='"
-                        + maxReceiveMessageSize
-                        + '\''
-                        + '}';
+                return "RpcClient{" +
+                        "callTimeout=" + callTimeout +
+                        ", syncResultTimeout=" + syncResultTimeout +
+                        ", maxReceiveMessageSize=" + maxReceiveMessageSize +
+                        '}';
             }
         }
 
@@ -156,6 +175,7 @@ public class ChainMakerStubConfig {
         private String name;
         private String type;
         private String value;
+        private String path;
 
         public String getName() {
             return name;
@@ -181,19 +201,22 @@ public class ChainMakerStubConfig {
             this.value = value;
         }
 
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
         @Override
         public String toString() {
-            return "Resource{"
-                    + "name='"
-                    + name
-                    + '\''
-                    + ", type='"
-                    + type
-                    + '\''
-                    + ", value='"
-                    + value
-                    + '\''
-                    + '}';
+            return "Resource{" +
+                    "name='" + name + '\'' +
+                    ", type='" + type + '\'' +
+                    ", value='" + value + '\'' +
+                    ", path='" + path + '\'' +
+                    '}';
         }
     }
 

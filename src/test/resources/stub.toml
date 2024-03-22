@@ -8,21 +8,25 @@
     [chain.crypto]
         hash = "SHA256"
     [[chain.nodes]]
-        nodeAddr = "172.30.34.199:13001"
+        nodeAddr = "127.0.0.1:13001"
     [[chain.nodes]]
-        nodeAddr = "172.30.34.199:13002"
+        nodeAddr = "127.0.0.1:13002"
     [[chain.nodes]]
-        nodeAddr = "172.30.34.199:13003"
+        nodeAddr = "127.0.0.1:13003"
     [[chain.nodes]]
-        nodeAddr = "172.30.34.199:13004"
+        nodeAddr = "127.0.0.1:13004"
     [chain.rpcClient]
+        callTimeout = 10000
+        syncResultTimeout = 10000
         maxReceiveMessageSize = 100
 
 [[resources]]
     name = 'WeCrossProxy'
     type = 'CM_CONTRACT'
-    value = '1'
+    value = 'a6e7603f349e13ab4d5f422a55463a845213ed5a'
+    path = 'payment.cm.WeCrossProxy'
 [[resources]]
     name = 'WeCrossHub'
     type = 'CM_CONTRACT'
-    value = '2'
+    value = '737d37475b787843dbe1de942acb4bfebf5cb3e5'
+    path = 'payment.cm.WeCrossHub'
