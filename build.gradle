@@ -83,14 +83,18 @@ List logger = [
 ]
 
 dependencies {
-    compile logger
-    implementation('com.webank:wecross-java-stub:1.4.0') {
+    implementation logger
+    implementation ('com.webank:wecross-java-stub:1.4.0') {
         exclude group: "io.netty"
         exclude group: 'org.fisco-bcos', module: 'tcnative'
     }
-    compile('org.fisco-bcos.java-sdk:fisco-bcos-sdk-abi:2.10.0-SNAPSHOT')
+    implementation('org.fisco-bcos.java-sdk:fisco-bcos-sdk-abi:2.10.0-SNAPSHOT')
 
     implementation 'org.chainmaker:chainmaker-sdk-java:2.3.2'
+    implementation 'com.google.protobuf:protobuf-java-util:3.22.2'
+    implementation 'org.web3j:abi:5.0.0', {
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
+    }
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13.2'
