@@ -5,6 +5,7 @@ import org.chainmaker.pb.common.ChainmakerBlock;
 import org.chainmaker.pb.common.ChainmakerTransaction;
 import org.chainmaker.pb.common.ResultOuterClass;
 import org.chainmaker.sdk.ChainClientException;
+import org.chainmaker.sdk.User;
 import org.chainmaker.sdk.crypto.ChainMakerCryptoSuiteException;
 
 public interface ClientWrapper {
@@ -12,6 +13,10 @@ public interface ClientWrapper {
     ResultOuterClass.TxResponse invokeContract(
             String contractName, String method, Map<String, byte[]> params)
             throws ChainClientException, ChainMakerCryptoSuiteException;
+
+    ResultOuterClass.TxResponse sendContractRequest(
+            String contractName, String method, Map<String, byte[]> params, User user)
+            throws ChainMakerCryptoSuiteException, ChainClientException;
 
     ResultOuterClass.TxResponse queryContract(
             String contractName, String method, Map<String, byte[]> params)

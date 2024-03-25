@@ -172,10 +172,9 @@ public class ChainMakerConnection implements Connection {
         try {
             TransactionParams cmRequest =
                     objectMapper.readValue(request.getData(), TransactionParams.class);
-            String proxyContractName = cmRequest.getProxyContractName();
-            String proxyContractMethod = cmRequest.getProxyContractMethod();
-            Map<String, byte[]> proxyContractMethodParams =
-                    cmRequest.getProxyContractMethodParams();
+            String proxyContractName = cmRequest.getContractName();
+            String proxyContractMethod = cmRequest.getContractMethod();
+            Map<String, byte[]> proxyContractMethodParams = cmRequest.getContractMethodParams();
             ResultOuterClass.TxResponse txResponse =
                     clientWrapper.queryContract(
                             proxyContractName, proxyContractMethod, proxyContractMethodParams);
@@ -200,10 +199,9 @@ public class ChainMakerConnection implements Connection {
         try {
             TransactionParams cmRequest =
                     objectMapper.readValue(request.getData(), TransactionParams.class);
-            String proxyContractName = cmRequest.getProxyContractName();
-            String proxyContractMethod = cmRequest.getProxyContractMethod();
-            Map<String, byte[]> proxyContractMethodParams =
-                    cmRequest.getProxyContractMethodParams();
+            String proxyContractName = cmRequest.getContractName();
+            String proxyContractMethod = cmRequest.getContractMethod();
+            Map<String, byte[]> proxyContractMethodParams = cmRequest.getContractMethodParams();
 
             ResultOuterClass.TxResponse txResponse =
                     clientWrapper.invokeContract(

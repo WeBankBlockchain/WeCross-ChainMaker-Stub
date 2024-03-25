@@ -22,7 +22,6 @@ import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
 import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple3;
 import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple4;
 import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple6;
-import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.utils.Hex;
 import org.fisco.bcos.sdk.utils.Numeric;
 
@@ -317,20 +316,6 @@ public class FunctionUtility {
     }
 
     /**
-     * decode TransactionReceipt input field
-     *
-     * @param receipt
-     * @return
-     */
-    public static String[] decodeDefaultInput(TransactionReceipt receipt) {
-        if (Objects.isNull(receipt) || Objects.isNull(receipt.getInput())) {
-            return null;
-        }
-
-        return decodeDefaultInput(receipt.getInput());
-    }
-
-    /**
      * @param input
      * @return
      */
@@ -345,20 +330,6 @@ public class FunctionUtility {
         }
 
         return decodeDefaultOutput(input.substring(MethodIDLength));
-    }
-
-    /**
-     * decode TransactionReceipt output field
-     *
-     * @param receipt
-     * @return
-     */
-    public static String[] decodeDefaultOutput(TransactionReceipt receipt) {
-        if (Objects.isNull(receipt) || !receipt.isStatusOK()) {
-            return null;
-        }
-
-        return decodeDefaultOutput(receipt.getOutput());
     }
 
     /**

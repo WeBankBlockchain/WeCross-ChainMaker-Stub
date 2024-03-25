@@ -4,10 +4,13 @@ import com.webank.wecross.stub.chainmaker.config.ChainMakerStubConfig;
 import java.util.Map;
 import org.chainmaker.pb.common.ChainmakerBlock;
 import org.chainmaker.pb.common.ChainmakerTransaction;
+import org.chainmaker.pb.common.Request;
 import org.chainmaker.pb.common.ResultOuterClass;
 import org.chainmaker.sdk.ChainClient;
 import org.chainmaker.sdk.ChainClientException;
+import org.chainmaker.sdk.User;
 import org.chainmaker.sdk.crypto.ChainMakerCryptoSuiteException;
+import org.chainmaker.sdk.utils.Utils;
 
 public abstract class AbstractClientWrapper implements ClientWrapper {
 
@@ -27,7 +30,8 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
     public ResultOuterClass.TxResponse queryContract(
             String contractName, String method, Map<String, byte[]> params)
             throws ChainClientException, ChainMakerCryptoSuiteException {
-        return client.queryContract(contractName, method, null, params, rpcCallTimeout);
+        return client.queryContract(
+                Utils.calcContractName(contractName), method, null, params, rpcCallTimeout);
     }
 
     @Override
@@ -35,7 +39,22 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
             String contractName, String method, Map<String, byte[]> params)
             throws ChainClientException, ChainMakerCryptoSuiteException {
         return client.invokeContract(
-                contractName, method, null, params, rpcCallTimeout, syncResultTimeout);
+                Utils.calcContractName(contractName),
+                method,
+                null,
+                params,
+                rpcCallTimeout,
+                syncResultTimeout);
+    }
+
+    @Override
+    public ResultOuterClass.TxResponse sendContractRequest(
+            String contractName, String method, Map<String, byte[]> params, User user)
+            throws ChainMakerCryptoSuiteException, ChainClientException {
+        Request.Payload payload =
+                client.invokeContractPayload(
+                        Utils.calcContractName(contractName), method, "", params);
+        return client.sendContractRequest(payload, null, rpcCallTimeout, syncResultTimeout, user);
     }
 
     @Override
