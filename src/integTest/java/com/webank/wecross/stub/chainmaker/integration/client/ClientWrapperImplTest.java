@@ -1,5 +1,7 @@
-package com.webank.wecross.stub.chainmaker.client;
+package com.webank.wecross.stub.chainmaker.integration.client;
 
+import com.webank.wecross.stub.chainmaker.client.ClientWrapperFactory;
+import com.webank.wecross.stub.chainmaker.client.ClientWrapperImpl;
 import com.webank.wecross.stub.chainmaker.config.ChainMakerStubConfig;
 import com.webank.wecross.stub.chainmaker.config.ChainMakerStubConfigParser;
 import org.junit.Test;

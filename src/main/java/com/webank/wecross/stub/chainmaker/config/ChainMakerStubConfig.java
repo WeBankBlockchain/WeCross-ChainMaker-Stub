@@ -2,14 +2,13 @@ package com.webank.wecross.stub.chainmaker.config;
 
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerConstant;
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ChainMakerStubConfig {
-    private static final Logger logger = LoggerFactory.getLogger(Logger.class);
+    private static final Logger logger = LoggerFactory.getLogger(ChainMakerStubConfig.class);
 
     private Common common;
     private Chain chain;
@@ -114,11 +113,14 @@ public class ChainMakerStubConfig {
 
             @Override
             public String toString() {
-                return "RpcClient{" +
-                        "callTimeout=" + callTimeout +
-                        ", syncResultTimeout=" + syncResultTimeout +
-                        ", maxReceiveMessageSize=" + maxReceiveMessageSize +
-                        '}';
+                return "RpcClient{"
+                        + "callTimeout="
+                        + callTimeout
+                        + ", syncResultTimeout="
+                        + syncResultTimeout
+                        + ", maxReceiveMessageSize="
+                        + maxReceiveMessageSize
+                        + '}';
             }
         }
 
@@ -211,12 +213,20 @@ public class ChainMakerStubConfig {
 
         @Override
         public String toString() {
-            return "Resource{" +
-                    "name='" + name + '\'' +
-                    ", type='" + type + '\'' +
-                    ", value='" + value + '\'' +
-                    ", path='" + path + '\'' +
-                    '}';
+            return "Resource{"
+                    + "name='"
+                    + name
+                    + '\''
+                    + ", type='"
+                    + type
+                    + '\''
+                    + ", value='"
+                    + value
+                    + '\''
+                    + ", path='"
+                    + path
+                    + '\''
+                    + '}';
         }
     }
 

@@ -2,6 +2,8 @@ package com.webank.wecross.stub.chainmaker.client;
 
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.chainmaker.config.ChainMakerStubConfig;
+import java.io.IOException;
+import java.util.List;
 import org.chainmaker.sdk.ChainClient;
 import org.chainmaker.sdk.ChainManager;
 import org.chainmaker.sdk.config.ChainClientConfig;
@@ -13,9 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-
-import java.io.IOException;
-import java.util.List;
 
 public class ClientUtility {
 

@@ -44,6 +44,7 @@ public class ChainMakerStatusCode {
                 break;
             case UnrecognizedRequestType:
                 message = "unrecognized request type";
+                break;
             case TransactionReceiptNotExist:
                 message = "transaction receipt not exist";
                 break;

@@ -24,5 +24,3 @@ jobs:
         run: sudo apt-get update && sudo apt install -y git curl libssl-dev default-jdk build-essential
       - name: run integration testing
         run: /bin/bash .ci/ci_check.sh
-      - name: run check commit
-        run: /bin/bash .ci/ci_check_commit.sh

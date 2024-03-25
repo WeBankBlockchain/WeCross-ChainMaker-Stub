@@ -1,9 +1,7 @@
 package com.webank.wecross.stub.chainmaker.protocal;
 
 import com.webank.wecross.stub.TransactionRequest;
-
 import java.util.Map;
-
 
 public class TransactionParams {
     private TransactionRequest transactionRequest;
@@ -11,13 +9,11 @@ public class TransactionParams {
     private String proxyContractMethod;
     private Map<String, byte[]> proxyContractMethodParams;
 
-    public TransactionParams() {
-    }
-
-    public TransactionParams(TransactionRequest transactionRequest,
-                             String proxyContractName,
-                             String proxyContractMethod,
-                             Map<String, byte[]> proxyContractMethodParams) {
+    public TransactionParams(
+            TransactionRequest transactionRequest,
+            String proxyContractName,
+            String proxyContractMethod,
+            Map<String, byte[]> proxyContractMethodParams) {
         this.transactionRequest = transactionRequest;
         this.proxyContractName = proxyContractName;
         this.proxyContractMethod = proxyContractMethod;
@@ -58,11 +54,17 @@ public class TransactionParams {
 
     @Override
     public String toString() {
-        return "TransactionParams{" +
-                "transactionRequest=" + transactionRequest +
-                ", proxyContractName='" + proxyContractName + '\'' +
-                ", proxyContractMethod='" + proxyContractMethod + '\'' +
-                ", proxyContractMethodParams=" + proxyContractMethodParams +
-                '}';
+        return "TransactionParams{"
+                + "transactionRequest="
+                + transactionRequest
+                + ", proxyContractName='"
+                + proxyContractName
+                + '\''
+                + ", proxyContractMethod='"
+                + proxyContractMethod
+                + '\''
+                + ", proxyContractMethodParams="
+                + proxyContractMethodParams
+                + '}';
     }
 }
