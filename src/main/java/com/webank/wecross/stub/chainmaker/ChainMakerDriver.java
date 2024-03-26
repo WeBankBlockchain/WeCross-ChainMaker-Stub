@@ -59,17 +59,13 @@ public class ChainMakerDriver implements Driver {
 
   private final FunctionEncoder functionEncoder;
 
-  private final int encryptType;
-
   private final ABIDefinitionFactory abiDefinitionFactory;
 
-  public ChainMakerDriver(int encryptType) {
-    this.encryptType = encryptType;
-    CryptoSuite cryptoSuite = new CryptoSuite(encryptType);
-    codecJsonWrapper = new ABICodecJsonWrapper(true);
-    abiCodec = new ABICodec(cryptoSuite, true);
-    functionEncoder = new FunctionEncoder(cryptoSuite);
-    abiDefinitionFactory = new ABIDefinitionFactory(cryptoSuite);
+  public ChainMakerDriver(CryptoSuite cryptoSuite) {
+    this.codecJsonWrapper = new ABICodecJsonWrapper(true);
+    this.abiCodec = new ABICodec(cryptoSuite, true);
+    this.functionEncoder = new FunctionEncoder(cryptoSuite);
+    this.abiDefinitionFactory = new ABIDefinitionFactory(cryptoSuite);
   }
 
   @Override

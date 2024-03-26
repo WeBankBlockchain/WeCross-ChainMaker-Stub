@@ -1,6 +1,6 @@
 [common]
-    name = 'chainmaker'
-    type = 'PK'
+    name = 'chainmaker' # stub must be same with directory name
+    type = 'CHAIN_MAKER' # CHAIN_MAKER or CHAIN_MAKER_GM
 [chain]
     chainId = 'pkchain01'
     signKeyPath = 'sign.key'
@@ -21,12 +21,12 @@
         maxReceiveMessageSize = 100
 
 [[resources]]
+    type = 'CM_CONTRACT'
     name = 'WeCrossProxy'
-    type = 'CM_CONTRACT'
     value = 'a6e7603f349e13ab4d5f422a55463a845213ed5a'
-    path = 'payment.cm.WeCrossProxy'
+    abi = ''
 [[resources]]
-    name = 'WeCrossHub'
     type = 'CM_CONTRACT'
+    name = 'WeCrossHub'
     value = '737d37475b787843dbe1de942acb4bfebf5cb3e5'
-    path = 'payment.cm.WeCrossHub'
+    abi = ''

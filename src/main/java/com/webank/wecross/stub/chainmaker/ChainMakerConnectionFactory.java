@@ -6,7 +6,6 @@ import com.webank.wecross.stub.chainmaker.common.ChainMakerConstant;
 import com.webank.wecross.stub.chainmaker.config.ChainMakerStubConfig;
 import com.webank.wecross.stub.chainmaker.config.ChainMakerStubConfigParser;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.slf4j.Logger;
@@ -48,7 +47,9 @@ public class ChainMakerConnectionFactory {
       AbstractClientWrapper clientWrapper,
       ScheduledExecutorService executorService) {
     logger.info("chainMakerStubConfig: {}", chainMakerStubConfig);
-    ChainMakerConnection connection = new ChainMakerConnection(clientWrapper, executorService);
+    ChainMakerConnection connection =
+        new ChainMakerConnection(
+            chainMakerStubConfig.getStubCryptoSuite(), clientWrapper, executorService);
     connection.setResourceInfoList(chainMakerStubConfig.convertToResourceInfos());
 
     connection.addProperty(
@@ -64,13 +65,10 @@ public class ChainMakerConnectionFactory {
     List<ChainMakerStubConfig.Resource> resources = chainMakerStubConfig.getResources();
     if (!resources.isEmpty()) {
       for (ChainMakerStubConfig.Resource resource : resources) {
-        if (Objects.equals(resource.getName(), ChainMakerConstant.CHAIN_MAKER_PROXY_NAME)) {
-          connection.addProperty(ChainMakerConstant.CHAIN_MAKER_PROXY_NAME, resource.getValue());
-        }
-        if (Objects.equals(resource.getName(), ChainMakerConstant.CHAIN_MAKER_HUB_NAME)) {
-          connection.addProperty(ChainMakerConstant.CHAIN_MAKER_HUB_NAME, resource.getValue());
-        }
-        // TODO 将资源path注册到proxy合约
+        // name->address
+        connection.addProperty(resource.getName(), resource.getValue());
+        // name+ABI->abi
+        connection.addAbi(resource.getName(), resource.getAbi());
       }
     }
     return connection;

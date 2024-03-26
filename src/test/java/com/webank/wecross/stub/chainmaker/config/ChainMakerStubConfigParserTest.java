@@ -19,7 +19,7 @@ public class ChainMakerStubConfigParserTest {
     ChainMakerStubConfig.Common common = chainMakerStubConfig.getCommon();
     assertTrue(Objects.nonNull(common));
     assertEquals(common.getName(), "chainmaker");
-    assertEquals(common.getType(), "PK");
+    assertEquals(common.getType(), "CHAIN_MAKER");
 
     ChainMakerStubConfig.Chain chain = chainMakerStubConfig.getChain();
     assertTrue(Objects.nonNull(chain));
@@ -40,10 +40,8 @@ public class ChainMakerStubConfigParserTest {
     assertEquals(resources.get(0).getName(), "WeCrossProxy");
     assertEquals(resources.get(0).getType(), "CM_CONTRACT");
     assertEquals(resources.get(0).getValue(), "a6e7603f349e13ab4d5f422a55463a845213ed5a");
-    assertEquals(resources.get(0).getPath(), "payment.cm.WeCrossProxy");
     assertEquals(resources.get(1).getName(), "WeCrossHub");
     assertEquals(resources.get(1).getType(), "CM_CONTRACT");
     assertEquals(resources.get(1).getValue(), "737d37475b787843dbe1de942acb4bfebf5cb3e5");
-    assertEquals(resources.get(1).getPath(), "payment.cm.WeCrossHub");
   }
 }
