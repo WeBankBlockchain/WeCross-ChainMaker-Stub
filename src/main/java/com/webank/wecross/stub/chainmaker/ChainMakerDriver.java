@@ -15,6 +15,7 @@ import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.chainmaker.account.ChainMakerPublicAccount;
+import com.webank.wecross.stub.chainmaker.client.ClientUtility;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerConstant;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerRequestType;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerStatusCode;
@@ -31,6 +32,7 @@ import java.util.Objects;
 import java.util.UUID;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.chainmaker.pb.common.ResultOuterClass;
+import org.chainmaker.sdk.User;
 import org.chainmaker.sdk.utils.Utils;
 import org.fisco.bcos.sdk.abi.ABICodec;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
@@ -444,9 +446,7 @@ public class ChainMakerDriver implements Driver {
       String name = path.getResource();
 
       ChainMakerPublicAccount account = (ChainMakerPublicAccount) context.getAccount();
-      // FIXME: get account privateKey
-      String identity = account.getIdentity();
-
+      User user = account.getUser();
       // TODO: get abi by name
       String abi = "";
       if (abi == null) {
@@ -486,6 +486,7 @@ public class ChainMakerDriver implements Driver {
       String proxyMethod;
 
       if (Objects.isNull(transactionID) || transactionID.isEmpty() || "0".equals(transactionID)) {
+        proxyMethod = FunctionUtility.ProxySendTXMethod;
         function =
             FunctionUtility.newSendTransactionProxyFunction(
                 functionEncoder,
@@ -494,6 +495,7 @@ public class ChainMakerDriver implements Driver {
                 abiDefinition.getMethodSignatureAsString(),
                 encodedArgs);
       } else {
+        proxyMethod = FunctionUtility.ProxySendTransactionTXMethod;
         function =
             FunctionUtility.newSendTransactionProxyFunction(
                 uid,
@@ -505,8 +507,78 @@ public class ChainMakerDriver implements Driver {
       }
 
       String proxyParams = functionEncoder.encode(function);
-      // FIXME: implement send raw transaction interface.
 
+      Map<String, byte[]> params = new HashMap<>();
+      params.put(ChainMakerConstant.CHAIN_MAKER_CONTRACT_ARGS_EVM_PARAM, Hex.decode(proxyParams));
+
+      // FIXME: client chain id
+      org.chainmaker.pb.common.Request.Payload payload =
+          ClientUtility.createPayload(
+              "", contractAddress, functionEncoder.buildMethodId(proxyMethod), params);
+      // FIXME: client user orgId, hash alg
+      org.chainmaker.pb.common.Request.TxRequest txRequest =
+          ClientUtility.createTxRequest(payload, "", user, "");
+      TransactionParams transactionParams =
+          new TransactionParams(request, objectMapper.writeValueAsBytes(txRequest));
+      Request req =
+          Request.newRequest(
+              ChainMakerRequestType.SEND_TRANSACTION,
+              objectMapper.writeValueAsBytes(transactionParams));
+      connection.asyncSend(
+          req,
+          response -> {
+            try {
+              if (response.getErrorCode() != ChainMakerStatusCode.Success) {
+                throw new ChainMakerStubException(
+                    response.getErrorCode(), response.getErrorMessage());
+              }
+              ResultOuterClass.TxResponse txResponse =
+                  objectMapper.readValue(response.getData(), ResultOuterClass.TxResponse.class);
+              if (logger.isDebugEnabled()) {
+                logger.debug(
+                    "send transaction result, code: {}, msg: {}",
+                    txResponse.getCode(),
+                    txResponse.getMessage());
+              }
+              if (txResponse.getCode().getNumber()
+                  == ResultOuterClass.TxStatusCode.SUCCESS.getNumber()) {
+                transactionResponse.setErrorCode(ChainMakerStatusCode.Success);
+                transactionResponse.setMessage(
+                    ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
+                ABIObject outputObject = ABIObjectFactory.createOutputObject(abiDefinition);
+                byte[] proxyBytesOutput =
+                    FunctionUtility.decodeProxyBytesOutput(
+                        Hex.toHexString(txResponse.getContractResult().getResult().toByteArray()));
+                transactionResponse.setResult(
+                    codecJsonWrapper
+                        .decode(outputObject, Hex.toHexString(proxyBytesOutput))
+                        .toArray(new String[0]));
+
+              } else {
+                transactionResponse.setErrorCode(
+                    ChainMakerStatusCode.SendTransactionNotSuccessStatus);
+                Tuple2<Boolean, String> booleanStringTuple2 =
+                    RevertMessage.tryResolveRevertMessage(
+                        txResponse.getCode().getNumber(),
+                        Hex.toHexString(txResponse.getContractResult().getResult().toByteArray()));
+                if (Boolean.TRUE.equals(booleanStringTuple2.getValue1())) {
+                  transactionResponse.setMessage(booleanStringTuple2.getValue2());
+                } else {
+                  transactionResponse.setMessage(txResponse.getMessage());
+                }
+              }
+              callback.onTransactionResponse(null, transactionResponse);
+            } catch (ChainMakerStubException e) {
+              logger.warn(" e: ", e);
+              callback.onTransactionResponse(
+                  new TransactionException(e.getErrorCode(), e.getMessage()), null);
+            } catch (Exception e) {
+              logger.warn(" e: ", e);
+              callback.onTransactionResponse(
+                  new TransactionException(ChainMakerStatusCode.UnclassifiedError, e.getMessage()),
+                  null);
+            }
+          });
     } catch (ChainMakerStubException e) {
       logger.warn(" e: ", e);
       callback.onTransactionResponse(
@@ -522,5 +594,132 @@ public class ChainMakerDriver implements Driver {
       TransactionContext context,
       TransactionRequest request,
       Connection connection,
-      Callback callback) {}
+      Callback callback) {
+    TransactionResponse transactionResponse = new TransactionResponse();
+    // TODO: check properties
+    try {
+      Path path = context.getPath();
+      String name = path.getResource();
+
+      // TODO: get Abi by name
+      String abi = ""; // resources abi
+
+      if (abi == null) {
+        throw new ChainMakerStubException(
+            ChainMakerStatusCode.ABINotExist, "resource ABI not exist: " + name);
+      }
+      ChainMakerPublicAccount account = (ChainMakerPublicAccount) context.getAccount();
+      User user = account.getUser();
+      // encode
+      String[] args = request.getArgs();
+      String method = request.getMethod();
+
+      ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(abi);
+      ABIDefinition abiDefinition =
+          contractABIDefinition.getFunctions().get(method).stream()
+              .filter(function -> function.getInputs().size() == (args == null ? 0 : args.length))
+              .findFirst()
+              .orElseThrow(
+                  () ->
+                      new ChainMakerStubException(
+                          ChainMakerStatusCode.MethodNotExist, "method not exist: " + method));
+
+      byte[] encodedArgs =
+          Hex.decode(
+              abiCodec.encodeMethodFromString(
+                  abi, method, args != null ? Arrays.asList(args) : new ArrayList<>()));
+
+      if (logger.isDebugEnabled()) {
+        logger.debug(
+            " name:{}, address: {}, method: {}, args: {}",
+            name,
+            Utils.calcContractName(name),
+            request.getMethod(),
+            request.getArgs());
+      }
+
+      Map<String, byte[]> params = new HashMap<>();
+      params.put(ChainMakerConstant.CHAIN_MAKER_CONTRACT_ARGS_EVM_PARAM, encodedArgs);
+      // FIXME: client chain id
+      org.chainmaker.pb.common.Request.Payload payload =
+          ClientUtility.createPayload(
+              "",
+              Utils.calcContractName(name),
+              functionEncoder.buildMethodId(abiDefinition.getMethodSignatureAsString()),
+              params);
+      // FIXME: client user orgId, hash alg
+      org.chainmaker.pb.common.Request.TxRequest txRequest =
+          ClientUtility.createTxRequest(payload, "", user, "");
+      TransactionParams transactionParams =
+          new TransactionParams(request, objectMapper.writeValueAsBytes(txRequest));
+      Request req =
+          Request.newRequest(
+              ChainMakerRequestType.SEND_TRANSACTION,
+              objectMapper.writeValueAsBytes(transactionParams));
+      connection.asyncSend(
+          req,
+          response -> {
+            try {
+              if (response.getErrorCode() != ChainMakerStatusCode.Success) {
+                throw new ChainMakerStubException(
+                    response.getErrorCode(), response.getErrorMessage());
+              }
+              ResultOuterClass.TxResponse txResponse =
+                  objectMapper.readValue(response.getData(), ResultOuterClass.TxResponse.class);
+              if (logger.isDebugEnabled()) {
+                logger.debug(
+                    "call result, code: {}, msg: {}",
+                    txResponse.getCode(),
+                    txResponse.getMessage());
+              }
+              if (txResponse.getCode().getNumber()
+                  == ResultOuterClass.TxStatusCode.SUCCESS.getNumber()) {
+                // if success, try to decode results
+                transactionResponse.setErrorCode(ChainMakerStatusCode.Success);
+                transactionResponse.setMessage(
+                    ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
+                ABIObject outputObject = ABIObjectFactory.createOutputObject(abiDefinition);
+                transactionResponse.setResult(
+                    codecJsonWrapper
+                        .decode(
+                            outputObject,
+                            Hex.toHexString(
+                                txResponse.getContractResult().getResult().toByteArray()))
+                        .toArray(new String[0]));
+              } else {
+                // if error, try to decode revert msg
+                transactionResponse.setErrorCode(ChainMakerStatusCode.CallNotSuccessStatus);
+
+                Tuple2<Boolean, String> booleanStringTuple2 =
+                    RevertMessage.tryResolveRevertMessage(
+                        txResponse.getCode().getNumber(),
+                        Hex.toHexString(txResponse.getContractResult().getResult().toByteArray()));
+                if (Boolean.TRUE.equals(booleanStringTuple2.getValue1())) {
+                  transactionResponse.setMessage(booleanStringTuple2.getValue2());
+                } else {
+                  transactionResponse.setMessage(txResponse.getMessage());
+                }
+              }
+              callback.onTransactionResponse(null, transactionResponse);
+            } catch (ChainMakerStubException e) {
+              logger.warn(" e: ", e);
+              callback.onTransactionResponse(
+                  new TransactionException(e.getErrorCode(), e.getMessage()), null);
+            } catch (Exception e) {
+              logger.warn(" e: ", e);
+              callback.onTransactionResponse(
+                  new TransactionException(ChainMakerStatusCode.UnclassifiedError, e.getMessage()),
+                  null);
+            }
+          });
+    } catch (ChainMakerStubException e) {
+      logger.warn(" e: ", e);
+      callback.onTransactionResponse(
+          new TransactionException(e.getErrorCode(), e.getMessage()), null);
+    } catch (Exception e) {
+      logger.warn(" e: ", e);
+      callback.onTransactionResponse(
+          new TransactionException(ChainMakerStatusCode.UnclassifiedError, e.getMessage()), null);
+    }
+  }
 }
