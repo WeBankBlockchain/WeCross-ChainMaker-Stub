@@ -18,62 +18,62 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 public class ClientUtility {
 
-    private static final Logger logger = LoggerFactory.getLogger(ClientUtility.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClientUtility.class);
 
-    private static final ChainManager chainManager;
+  private static final ChainManager chainManager;
 
-    static {
-        chainManager = ChainManager.getInstance();
+  static {
+    chainManager = ChainManager.getInstance();
+  }
+
+  public static ChainClient initClient(ChainMakerStubConfig stubConfig) throws Exception {
+    SdkConfig sdkConfig = new SdkConfig();
+    ChainClientConfig chainClientConfig = buildChainClientConfig(stubConfig.getChain());
+    sdkConfig.setChainClient(chainClientConfig);
+    return chainManager.createChainClient(sdkConfig);
+  }
+
+  private static ChainClientConfig buildChainClientConfig(ChainMakerStubConfig.Chain chain)
+      throws WeCrossException, IOException {
+    String chainId = chain.getChainId();
+    String signKeyPath = chain.getSignKeyPath();
+    String authType = chain.getAuthType();
+    String hash = chain.getCrypto().getHash();
+    List<ChainMakerStubConfig.Chain.Node> nodes = chain.getNodes();
+    int maxReceiveMessageSize = chain.getRpcClient().getMaxReceiveMessageSize();
+
+    CryptoConfig cryptoConfig = new CryptoConfig();
+    cryptoConfig.setHash(hash);
+
+    NodeConfig[] nodeConfigs =
+        nodes.stream()
+            .map(
+                s -> {
+                  NodeConfig nodeConfig = new NodeConfig();
+                  nodeConfig.setNodeAddr(s.getNodeAddr());
+                  return nodeConfig;
+                })
+            .toArray(NodeConfig[]::new);
+
+    RpcClientConfig rpcClientConfig = new RpcClientConfig();
+    rpcClientConfig.setMaxReceiveMessageSize(maxReceiveMessageSize);
+
+    PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+    Resource signKeyResource = resolver.getResource(signKeyPath);
+    if (!signKeyResource.exists() || !signKeyResource.isFile()) {
+      throw new WeCrossException(
+          WeCrossException.ErrorCode.DIR_NOT_EXISTS,
+          signKeyPath + " does not exist, please check.");
     }
 
-    public static ChainClient initClient(ChainMakerStubConfig stubConfig) throws Exception {
-        SdkConfig sdkConfig = new SdkConfig();
-        ChainClientConfig chainClientConfig = buildChainClientConfig(stubConfig.getChain());
-        sdkConfig.setChainClient(chainClientConfig);
-        return chainManager.createChainClient(sdkConfig);
-    }
+    ChainClientConfig chainClientConfig = new ChainClientConfig();
+    chainClientConfig.setChainId(chainId);
+    chainClientConfig.setUserSignKeyFilePath(signKeyResource.getFile().getPath());
+    chainClientConfig.setAuthType(authType);
+    chainClientConfig.setCrypto(cryptoConfig);
+    chainClientConfig.setNodes(nodeConfigs);
+    chainClientConfig.setRpcClient(rpcClientConfig);
 
-    private static ChainClientConfig buildChainClientConfig(ChainMakerStubConfig.Chain chain)
-            throws WeCrossException, IOException {
-        String chainId = chain.getChainId();
-        String signKeyPath = chain.getSignKeyPath();
-        String authType = chain.getAuthType();
-        String hash = chain.getCrypto().getHash();
-        List<ChainMakerStubConfig.Chain.Node> nodes = chain.getNodes();
-        int maxReceiveMessageSize = chain.getRpcClient().getMaxReceiveMessageSize();
-
-        CryptoConfig cryptoConfig = new CryptoConfig();
-        cryptoConfig.setHash(hash);
-
-        NodeConfig[] nodeConfigs =
-                nodes.stream()
-                        .map(
-                                s -> {
-                                    NodeConfig nodeConfig = new NodeConfig();
-                                    nodeConfig.setNodeAddr(s.getNodeAddr());
-                                    return nodeConfig;
-                                })
-                        .toArray(NodeConfig[]::new);
-
-        RpcClientConfig rpcClientConfig = new RpcClientConfig();
-        rpcClientConfig.setMaxReceiveMessageSize(maxReceiveMessageSize);
-
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        Resource signKeyResource = resolver.getResource(signKeyPath);
-        if (!signKeyResource.exists() || !signKeyResource.isFile()) {
-            throw new WeCrossException(
-                    WeCrossException.ErrorCode.DIR_NOT_EXISTS,
-                    signKeyPath + " does not exist, please check.");
-        }
-
-        ChainClientConfig chainClientConfig = new ChainClientConfig();
-        chainClientConfig.setChainId(chainId);
-        chainClientConfig.setUserSignKeyFilePath(signKeyResource.getFile().getPath());
-        chainClientConfig.setAuthType(authType);
-        chainClientConfig.setCrypto(cryptoConfig);
-        chainClientConfig.setNodes(nodeConfigs);
-        chainClientConfig.setRpcClient(rpcClientConfig);
-
-        return chainClientConfig;
-    }
+    return chainClientConfig;
+  }
 }
