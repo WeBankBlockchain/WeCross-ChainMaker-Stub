@@ -1,27 +1,23 @@
 package com.webank.wecross.stub.chainmaker.protocal;
 
 import com.webank.wecross.stub.TransactionRequest;
-
 import java.util.Map;
-
 
 public class TransactionParams {
     private TransactionRequest transactionRequest;
-    private String proxyContractName;
-    private String proxyContractMethod;
-    private Map<String, byte[]> proxyContractMethodParams;
+    private String contractName;
+    private String contractMethod;
+    private Map<String, byte[]> contractMethodParams;
 
-    public TransactionParams() {
-    }
-
-    public TransactionParams(TransactionRequest transactionRequest,
-                             String proxyContractName,
-                             String proxyContractMethod,
-                             Map<String, byte[]> proxyContractMethodParams) {
+    public TransactionParams(
+            TransactionRequest transactionRequest,
+            String contractName,
+            String contractMethod,
+            Map<String, byte[]> contractMethodParams) {
         this.transactionRequest = transactionRequest;
-        this.proxyContractName = proxyContractName;
-        this.proxyContractMethod = proxyContractMethod;
-        this.proxyContractMethodParams = proxyContractMethodParams;
+        this.contractName = contractName;
+        this.contractMethod = contractMethod;
+        this.contractMethodParams = contractMethodParams;
     }
 
     public TransactionRequest getTransactionRequest() {
@@ -32,37 +28,43 @@ public class TransactionParams {
         this.transactionRequest = transactionRequest;
     }
 
-    public String getProxyContractName() {
-        return proxyContractName;
+    public String getContractName() {
+        return contractName;
     }
 
-    public void setProxyContractName(String proxyContractName) {
-        this.proxyContractName = proxyContractName;
+    public void setContractName(String contractName) {
+        this.contractName = contractName;
     }
 
-    public String getProxyContractMethod() {
-        return proxyContractMethod;
+    public String getContractMethod() {
+        return contractMethod;
     }
 
-    public void setProxyContractMethod(String proxyContractMethod) {
-        this.proxyContractMethod = proxyContractMethod;
+    public void setContractMethod(String contractMethod) {
+        this.contractMethod = contractMethod;
     }
 
-    public Map<String, byte[]> getProxyContractMethodParams() {
-        return proxyContractMethodParams;
+    public Map<String, byte[]> getContractMethodParams() {
+        return contractMethodParams;
     }
 
-    public void setProxyContractMethodParams(Map<String, byte[]> proxyContractMethodParams) {
-        this.proxyContractMethodParams = proxyContractMethodParams;
+    public void setContractMethodParams(Map<String, byte[]> contractMethodParams) {
+        this.contractMethodParams = contractMethodParams;
     }
 
     @Override
     public String toString() {
-        return "TransactionParams{" +
-                "transactionRequest=" + transactionRequest +
-                ", proxyContractName='" + proxyContractName + '\'' +
-                ", proxyContractMethod='" + proxyContractMethod + '\'' +
-                ", proxyContractMethodParams=" + proxyContractMethodParams +
-                '}';
+        return "TransactionParams{"
+                + "transactionRequest="
+                + transactionRequest
+                + ", proxyContractName='"
+                + contractName
+                + '\''
+                + ", proxyContractMethod='"
+                + contractMethod
+                + '\''
+                + ", proxyContractMethodParams="
+                + contractMethodParams
+                + '}';
     }
 }

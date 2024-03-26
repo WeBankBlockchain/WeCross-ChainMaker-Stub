@@ -6,10 +6,9 @@ import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.StubFactory;
 import com.webank.wecross.stub.WeCrossContext;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerConstant;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 public class ChainMakerBaseFactory implements StubFactory {
     private final Logger logger = LoggerFactory.getLogger(ChainMakerBaseFactory.class);
@@ -25,26 +24,27 @@ public class ChainMakerBaseFactory implements StubFactory {
     @Override
     public Connection newConnection(String path) {
         try {
-            ChainMakerConnection connection = ChainMakerConnectionFactory.build(path, ChainMakerConstant.STUB_TOML_NAME);
+            ChainMakerConnection connection =
+                    ChainMakerConnectionFactory.build(path, ChainMakerConstant.STUB_TOML_NAME);
 
             // check proxy contract
             if (!connection.hasProxyDeployed()) {
                 String errorMsg =
                         "WeCrossProxy error: WeCrossProxy contract has not been deployed!";
-//                String help =
-//                        "Please deploy WeCrossProxy contract by: "
-//                                + ProxyContractDeployment.getUsage(path);
-//                System.out.println(errorMsg + "\n" + help);
+                //                String help =
+                //                        "Please deploy WeCrossProxy contract by: "
+                //                                + ProxyContractDeployment.getUsage(path);
+                //                System.out.println(errorMsg + "\n" + help);
                 throw new Exception(errorMsg);
             }
 
             // check hub contract
             if (!connection.hasHubDeployed()) {
                 String errorMsg = "WeCrossHub error: WeCrossHub contract has not been deployed!";
-//                String help =
-//                        "Please deploy WeCrossHub contract by: "
-//                                + HubContractDeployment.getUsage(path);
-//                System.out.println(errorMsg + "\n" + help);
+                //                String help =
+                //                        "Please deploy WeCrossHub contract by: "
+                //                                + HubContractDeployment.getUsage(path);
+                //                System.out.println(errorMsg + "\n" + help);
                 throw new Exception(errorMsg);
             }
 

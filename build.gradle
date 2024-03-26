@@ -26,6 +26,7 @@ repositories {
     mavenCentral()
     maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url "https://maven.aliyun.com/repository/gradle-plugin" }
 }
 
 spotless {

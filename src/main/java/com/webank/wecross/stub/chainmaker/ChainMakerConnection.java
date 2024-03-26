@@ -1,6 +1,5 @@
 package com.webank.wecross.stub.chainmaker;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.protobuf.ByteString;
@@ -15,17 +14,6 @@ import com.webank.wecross.stub.chainmaker.common.ChainMakerConstant;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerRequestType;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerStatusCode;
 import com.webank.wecross.stub.chainmaker.protocal.TransactionParams;
-import org.chainmaker.pb.common.ChainmakerBlock;
-import org.chainmaker.pb.common.ChainmakerTransaction;
-import org.chainmaker.pb.common.ResultOuterClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Array;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Utf8String;
-
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -39,6 +27,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.chainmaker.pb.common.ChainmakerBlock;
+import org.chainmaker.pb.common.ChainmakerTransaction;
+import org.chainmaker.pb.common.ResultOuterClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Array;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Utf8String;
 
 public class ChainMakerConnection implements Connection {
     private static final Logger logger = LoggerFactory.getLogger(ChainMakerConnection.class);
@@ -50,8 +48,9 @@ public class ChainMakerConnection implements Connection {
     private final Map<String, String> properties = new HashMap<>();
     private final AbstractClientWrapper clientWrapper;
 
-    public ChainMakerConnection(AbstractClientWrapper clientWrapper,
-                                ScheduledExecutorService scheduledExecutorService) {
+    public ChainMakerConnection(
+            AbstractClientWrapper clientWrapper,
+            ScheduledExecutorService scheduledExecutorService) {
         this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         this.clientWrapper = clientWrapper;
         scheduledExecutorService.scheduleAtFixedRate(
@@ -67,13 +66,13 @@ public class ChainMakerConnection implements Connection {
 
     @Override
     public void asyncSend(Request request, Callback callback) {
-        //request type
+        // request type
         int type = request.getType();
         if (type == ChainMakerRequestType.CALL) {
-            //constantCall constantCallWithXa
+            // constantCall constantCallWithXa
             handleAsyncCallRequest(request, callback);
         } else if (type == ChainMakerRequestType.SEND_TRANSACTION) {
-            //sendTransaction sendTransactionWithXa
+            // sendTransaction sendTransactionWithXa
             handleAsyncTransactionRequest(request, callback);
         } else if (type == ChainMakerRequestType.GET_BLOCK_NUMBER) {
             handleAsyncGetBlockNumberRequest(callback);
@@ -88,9 +87,10 @@ public class ChainMakerConnection implements Connection {
             Response response = new Response();
             response.setErrorCode(ChainMakerStatusCode.UnrecognizedRequestType);
             response.setErrorMessage(
-                    ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.UnrecognizedRequestType)
-                            + " ,type: " + request.getType()
-            );
+                    ChainMakerStatusCode.getStatusMessage(
+                                    ChainMakerStatusCode.UnrecognizedRequestType)
+                            + " ,type: "
+                            + request.getType());
             callback.onResponse(response);
         }
     }
@@ -101,10 +101,13 @@ public class ChainMakerConnection implements Connection {
             String txId = new String(request.getData(), StandardCharsets.UTF_8);
             ChainmakerTransaction.TransactionInfo transactionInfo = clientWrapper.getTxByTxId(txId);
             if (logger.isDebugEnabled()) {
-                logger.debug("handleAsyncGetTransaction: {}", JsonFormat.printer().print(transactionInfo));
+                logger.debug(
+                        "handleAsyncGetTransaction: {}",
+                        JsonFormat.printer().print(transactionInfo));
             }
             response.setErrorCode(ChainMakerStatusCode.Success);
-            response.setErrorMessage(ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
+            response.setErrorMessage(
+                    ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
             response.setData(objectMapper.writeValueAsBytes(transactionInfo));
         } catch (Exception e) {
             logger.warn("handleAsyncGetTransaction Exception, e: ", e);
@@ -116,7 +119,7 @@ public class ChainMakerConnection implements Connection {
     }
 
     private void handleAsyncGetTransactionProof(Request request, Callback callback) {
-        //TODO no proof ？
+        // TODO no proof ？
 
     }
 
@@ -124,12 +127,15 @@ public class ChainMakerConnection implements Connection {
         Response response = new Response();
         try {
             BigInteger blockHeight = new BigInteger(request.getData());
-            ChainmakerBlock.BlockInfo blockInfo = clientWrapper.getBlockByHeight(blockHeight.longValue());
+            ChainmakerBlock.BlockInfo blockInfo =
+                    clientWrapper.getBlockByHeight(blockHeight.longValue());
             if (logger.isDebugEnabled()) {
-                logger.debug("handleAsyncGetBlockRequest: {}", JsonFormat.printer().print(blockInfo));
+                logger.debug(
+                        "handleAsyncGetBlockRequest: {}", JsonFormat.printer().print(blockInfo));
             }
             response.setErrorCode(ChainMakerStatusCode.Success);
-            response.setErrorMessage(ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
+            response.setErrorMessage(
+                    ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
             response.setData(objectMapper.writeValueAsBytes(blockInfo));
         } catch (Exception e) {
             logger.warn("handleAsyncGetBlockRequest Exception, e: ", e);
@@ -138,18 +144,19 @@ public class ChainMakerConnection implements Connection {
         } finally {
             callback.onResponse(response);
         }
-
     }
 
     private void handleAsyncGetBlockNumberRequest(Callback callback) {
         Response response = new Response();
         try {
-            BigInteger currentBlockHeight = BigInteger.valueOf(clientWrapper.getCurrentBlockHeight());
+            BigInteger currentBlockHeight =
+                    BigInteger.valueOf(clientWrapper.getCurrentBlockHeight());
             if (logger.isDebugEnabled()) {
                 logger.debug("currentBlockHeight: {}", currentBlockHeight);
             }
             response.setErrorCode(ChainMakerStatusCode.Success);
-            response.setErrorMessage(ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
+            response.setErrorMessage(
+                    ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
             response.setData(currentBlockHeight.toByteArray());
         } catch (Exception e) {
             logger.warn("handleGetBlockNumberRequest Exception, e: ", e);
@@ -163,23 +170,20 @@ public class ChainMakerConnection implements Connection {
     private void handleAsyncCallRequest(Request request, Callback callback) {
         Response response = new Response();
         try {
-            TransactionParams cmRequest = objectMapper.readValue(
-                    request.getData(),
-                    TransactionParams.class
-            );
-            String proxyContractName = cmRequest.getProxyContractName();
-            String proxyContractMethod = cmRequest.getProxyContractMethod();
-            Map<String, byte[]> proxyContractMethodParams = cmRequest.getProxyContractMethodParams();
-            ResultOuterClass.TxResponse txResponse = clientWrapper.queryContract(
-                    proxyContractName,
-                    proxyContractMethod,
-                    proxyContractMethodParams
-            );
+            TransactionParams cmRequest =
+                    objectMapper.readValue(request.getData(), TransactionParams.class);
+            String proxyContractName = cmRequest.getContractName();
+            String proxyContractMethod = cmRequest.getContractMethod();
+            Map<String, byte[]> proxyContractMethodParams = cmRequest.getContractMethodParams();
+            ResultOuterClass.TxResponse txResponse =
+                    clientWrapper.queryContract(
+                            proxyContractName, proxyContractMethod, proxyContractMethodParams);
             if (logger.isDebugEnabled()) {
                 logger.debug("handleAsyncCallRequest: {}", JsonFormat.printer().print(txResponse));
             }
             response.setErrorCode(ChainMakerStatusCode.Success);
-            response.setErrorMessage(ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
+            response.setErrorMessage(
+                    ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
             response.setData(objectMapper.writeValueAsBytes(txResponse));
         } catch (Exception e) {
             logger.warn("handleAsyncCallRequest Exception:", e);
@@ -193,24 +197,23 @@ public class ChainMakerConnection implements Connection {
     private void handleAsyncTransactionRequest(Request request, Callback callback) {
         Response response = new Response();
         try {
-            TransactionParams cmRequest = objectMapper.readValue(
-                    request.getData(),
-                    TransactionParams.class
-            );
-            String proxyContractName = cmRequest.getProxyContractName();
-            String proxyContractMethod = cmRequest.getProxyContractMethod();
-            Map<String, byte[]> proxyContractMethodParams = cmRequest.getProxyContractMethodParams();
+            TransactionParams cmRequest =
+                    objectMapper.readValue(request.getData(), TransactionParams.class);
+            String proxyContractName = cmRequest.getContractName();
+            String proxyContractMethod = cmRequest.getContractMethod();
+            Map<String, byte[]> proxyContractMethodParams = cmRequest.getContractMethodParams();
 
-            ResultOuterClass.TxResponse txResponse = clientWrapper.invokeContract(
-                    proxyContractName,
-                    proxyContractMethod,
-                    proxyContractMethodParams
-            );
+            ResultOuterClass.TxResponse txResponse =
+                    clientWrapper.invokeContract(
+                            proxyContractName, proxyContractMethod, proxyContractMethodParams);
             if (logger.isDebugEnabled()) {
-                logger.debug("handleAsyncTransactionRequest: {}", JsonFormat.printer().print(txResponse));
+                logger.debug(
+                        "handleAsyncTransactionRequest: {}",
+                        JsonFormat.printer().print(txResponse));
             }
             response.setErrorCode(ChainMakerStatusCode.Success);
-            response.setErrorMessage(ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
+            response.setErrorMessage(
+                    ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
             response.setData(objectMapper.writeValueAsBytes(txResponse));
         } catch (Exception e) {
             logger.warn("handleAsyncTransactionRequest Exception:", e);
@@ -220,7 +223,6 @@ public class ChainMakerConnection implements Connection {
             callback.onResponse(response);
         }
     }
-
 
     private void noteOnResourcesChange() {
         synchronized (this) {
@@ -236,24 +238,32 @@ public class ChainMakerConnection implements Connection {
     }
 
     public List<ResourceInfo> getResources() {
-        List<ResourceInfo> resources = new ArrayList<ResourceInfo>() {{
-            addAll(resourceInfoList);
-        }};
+        List<ResourceInfo> resources =
+                new ArrayList<ResourceInfo>() {
+                    {
+                        addAll(resourceInfoList);
+                    }
+                };
 
-        //from proxy contract
+        // from proxy contract
         String[] paths = listPaths();
         if (Objects.nonNull(paths)) {
             for (String path : paths) {
                 ResourceInfo resourceInfo = new ResourceInfo();
-                resourceInfo.setStubType(getProperty(ChainMakerConstant.CHAIN_MAKER_PROPERTY_STUB_TYPE));
+                resourceInfo.setStubType(
+                        getProperty(ChainMakerConstant.CHAIN_MAKER_PROPERTY_STUB_TYPE));
                 String[] pathSplit = path.split("\\.");
                 if (pathSplit.length != 3) {
                     continue;
                 }
                 resourceInfo.setName(pathSplit[2]);
                 Map<Object, Object> resourceProperties = new HashMap<>();
-                resourceProperties.put(ChainMakerConstant.CHAIN_MAKER_PROPERTY_CHAIN_ID, getProperty(ChainMakerConstant.CHAIN_MAKER_PROPERTY_CHAIN_ID));
-                resourceProperties.put(ChainMakerConstant.CHAIN_MAKER_PROPERTY_AUTH_TYPE, getProperty(ChainMakerConstant.CHAIN_MAKER_PROPERTY_AUTH_TYPE));
+                resourceProperties.put(
+                        ChainMakerConstant.CHAIN_MAKER_PROPERTY_CHAIN_ID,
+                        getProperty(ChainMakerConstant.CHAIN_MAKER_PROPERTY_CHAIN_ID));
+                resourceProperties.put(
+                        ChainMakerConstant.CHAIN_MAKER_PROPERTY_AUTH_TYPE,
+                        getProperty(ChainMakerConstant.CHAIN_MAKER_PROPERTY_AUTH_TYPE));
                 resourceInfo.setProperties(resourceProperties);
                 resources.add(resourceInfo);
             }
@@ -263,29 +273,28 @@ public class ChainMakerConnection implements Connection {
 
     public String[] listPaths() {
         String proxyContactName = getProperty(ChainMakerConstant.CHAIN_MAKER_PROXY_NAME);
-        Function function = new Function(
-                ChainMakerConstant.PROXY_METHOD_GET_PATHS,
-                Collections.emptyList(),
-                Arrays.asList(new TypeReference<Array<Utf8String>>() {
-                })
-        );
+        Function function =
+                new Function(
+                        ChainMakerConstant.PROXY_METHOD_GET_PATHS,
+                        Collections.emptyList(),
+                        Arrays.asList(new TypeReference<Array<Utf8String>>() {}));
         Map<String, byte[]> params = new HashMap<>();
         String methodDataStr = FunctionEncoder.encode(function);
         String method = methodDataStr.substring(0, 10);
-        params.put(ChainMakerConstant.CHAIN_MAKER_CONTRACT_ARGS_EVM_PARAM, methodDataStr.getBytes());
+        params.put(
+                ChainMakerConstant.CHAIN_MAKER_CONTRACT_ARGS_EVM_PARAM, methodDataStr.getBytes());
         try {
-            ResultOuterClass.TxResponse responseInfo = clientWrapper.queryContract(
-                    proxyContactName,
-                    method,
-                    params
-            );
-            if (Objects.equals(responseInfo.getCode().getNumber(), ResultOuterClass.TxStatusCode.SUCCESS.getNumber())) {
+            ResultOuterClass.TxResponse responseInfo =
+                    clientWrapper.queryContract(proxyContactName, method, params);
+            if (Objects.equals(
+                    responseInfo.getCode().getNumber(),
+                    ResultOuterClass.TxStatusCode.SUCCESS.getNumber())) {
                 logger.warn("listPaths failed, status {}", responseInfo.getCode().getNumber());
                 return null;
             }
-            //TODO 解析返回结果
+            // TODO 解析返回结果
             ByteString result = responseInfo.getContractResult().getResult();
-            String[] paths = new String[]{};
+            String[] paths = new String[] {};
             Set<String> set = new LinkedHashSet<>();
             set.add("a.b." + ChainMakerConstant.CHAIN_MAKER_PROXY_NAME);
             set.add("a.b." + ChainMakerConstant.CHAIN_MAKER_HUB_NAME);
@@ -310,7 +319,6 @@ public class ChainMakerConnection implements Connection {
     public boolean hasHubDeployed() {
         return getProperties().containsKey(ChainMakerConstant.CHAIN_MAKER_HUB_NAME);
     }
-
 
     public List<ResourceInfo> getResourceInfoList() {
         return resourceInfoList;
