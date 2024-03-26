@@ -8,16 +8,16 @@ import org.junit.Test;
 
 public class ClientWrapperImplTest {
 
-    @Test
-    public void clientWrapperImplTest() {
-        try {
-            ChainMakerStubConfigParser chainMakerStubConfigParser =
-                    new ChainMakerStubConfigParser("./", "stub-test.toml");
-            ChainMakerStubConfig chainMakerStubConfig = chainMakerStubConfigParser.loadConfig();
-            ClientWrapperImpl clientWrapperInstance =
-                    ClientWrapperFactory.createClientWrapperInstance(chainMakerStubConfig);
-        } catch (Exception e) {
-            // fail();
-        }
+  @Test
+  public void clientWrapperImplTest() {
+    try {
+      ChainMakerStubConfigParser chainMakerStubConfigParser =
+          new ChainMakerStubConfigParser("./", "stub-test.toml");
+      ChainMakerStubConfig chainMakerStubConfig = chainMakerStubConfigParser.loadConfig();
+      ClientWrapperImpl clientWrapperInstance =
+          ClientWrapperFactory.createClientWrapperInstance(chainMakerStubConfig);
+    } catch (Exception e) {
+      // fail();
     }
+  }
 }

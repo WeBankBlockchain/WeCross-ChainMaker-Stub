@@ -9,18 +9,18 @@ import org.junit.Test;
 
 public class ChainMakerConnectionTest {
 
-    @Test
-    public void handleGetBlockNumberTest() throws Exception {
-        ChainMakerConnection connection = ChainMakerConnectionFactory.build("./", "stub-test.toml");
-        Request request = new Request();
-        request.setType(ChainMakerRequestType.GET_BLOCK_NUMBER);
+  @Test
+  public void handleGetBlockNumberTest() throws Exception {
+    ChainMakerConnection connection = ChainMakerConnectionFactory.build("./", "stub-test.toml");
+    Request request = new Request();
+    request.setType(ChainMakerRequestType.GET_BLOCK_NUMBER);
 
-        connection.asyncSend(
-                request,
-                response -> {
-                    BigInteger blockNumber = new BigInteger(response.getData());
-                    System.out.println("-----blockNumber:" + blockNumber);
-                    // Assert.assertNotNull(blockNumber);
-                });
-    }
+    connection.asyncSend(
+        request,
+        response -> {
+          BigInteger blockNumber = new BigInteger(response.getData());
+          System.out.println("-----blockNumber:" + blockNumber);
+          // Assert.assertNotNull(blockNumber);
+        });
+  }
 }

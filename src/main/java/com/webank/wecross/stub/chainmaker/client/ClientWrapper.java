@@ -10,29 +10,29 @@ import org.chainmaker.sdk.crypto.ChainMakerCryptoSuiteException;
 
 public interface ClientWrapper {
 
-    ResultOuterClass.TxResponse invokeContract(
-            String contractName, String method, Map<String, byte[]> params)
-            throws ChainClientException, ChainMakerCryptoSuiteException;
+  ResultOuterClass.TxResponse invokeContract(
+      String contractName, String method, Map<String, byte[]> params)
+      throws ChainClientException, ChainMakerCryptoSuiteException;
 
-    ResultOuterClass.TxResponse sendContractRequest(
-            String contractName, String method, Map<String, byte[]> params, User user)
-            throws ChainMakerCryptoSuiteException, ChainClientException;
+  ResultOuterClass.TxResponse sendContractRequest(
+      String contractName, String method, Map<String, byte[]> params, User user)
+      throws ChainMakerCryptoSuiteException, ChainClientException;
 
-    ResultOuterClass.TxResponse queryContract(
-            String contractName, String method, Map<String, byte[]> params)
-            throws ChainClientException, ChainMakerCryptoSuiteException;
+  ResultOuterClass.TxResponse queryContract(
+      String contractName, String method, Map<String, byte[]> params)
+      throws ChainClientException, ChainMakerCryptoSuiteException;
 
-    ChainmakerBlock.BlockInfo getBlockByHeight(long blockHeight)
-            throws ChainClientException, ChainMakerCryptoSuiteException;
+  ChainmakerBlock.BlockInfo getBlockByHeight(long blockHeight)
+      throws ChainClientException, ChainMakerCryptoSuiteException;
 
-    ChainmakerBlock.BlockHeader getBlockHeaderByHeight(long blockHeight)
-            throws ChainClientException, ChainMakerCryptoSuiteException;
+  ChainmakerBlock.BlockHeader getBlockHeaderByHeight(long blockHeight)
+      throws ChainClientException, ChainMakerCryptoSuiteException;
 
-    long getCurrentBlockHeight() throws ChainClientException, ChainMakerCryptoSuiteException;
+  long getCurrentBlockHeight() throws ChainClientException, ChainMakerCryptoSuiteException;
 
-    ChainmakerTransaction.TransactionInfo getTxByTxId(String txId)
-            throws ChainClientException, ChainMakerCryptoSuiteException;
+  ChainmakerTransaction.TransactionInfo getTxByTxId(String txId)
+      throws ChainClientException, ChainMakerCryptoSuiteException;
 
-    byte[] getMerklePathByTxId(String txId)
-            throws ChainClientException, ChainMakerCryptoSuiteException;
+  byte[] getMerklePathByTxId(String txId)
+      throws ChainClientException, ChainMakerCryptoSuiteException;
 }

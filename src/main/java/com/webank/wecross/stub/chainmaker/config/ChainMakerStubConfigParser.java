@@ -9,15 +9,15 @@ import org.slf4j.LoggerFactory;
 
 public class ChainMakerStubConfigParser extends AbstractChainMakerConfigParser {
 
-    private static final Logger logger = LoggerFactory.getLogger(ChainMakerStubConfigParser.class);
+  private static final Logger logger = LoggerFactory.getLogger(ChainMakerStubConfigParser.class);
 
-    public ChainMakerStubConfigParser(String configPath, String configName) {
-        super(configPath + File.separator + configName);
-    }
+  public ChainMakerStubConfigParser(String configPath, String configName) {
+    super(configPath + File.separator + configName);
+  }
 
-    public ChainMakerStubConfig loadConfig() throws IOException {
-        ChainMakerToml chainMakerToml = new ChainMakerToml(getConfigPath());
-        Toml toml = chainMakerToml.getToml();
-        return toml.to(ChainMakerStubConfig.class);
-    }
+  public ChainMakerStubConfig loadConfig() throws IOException {
+    ChainMakerToml chainMakerToml = new ChainMakerToml(getConfigPath());
+    Toml toml = chainMakerToml.getToml();
+    return toml.to(ChainMakerStubConfig.class);
+  }
 }
