@@ -8,6 +8,7 @@ public class TransactionParams {
   private String contractName;
   private String contractMethodId;
   private Map<String, byte[]> contractMethodParams;
+  private byte[] signData;
 
   public TransactionParams(
       TransactionRequest transactionRequest,
@@ -18,6 +19,11 @@ public class TransactionParams {
     this.contractName = contractName;
     this.contractMethodId = contractMethodId;
     this.contractMethodParams = contractMethodParams;
+  }
+
+  public TransactionParams(TransactionRequest transactionRequest, byte[] signData) {
+    this.transactionRequest = transactionRequest;
+    this.signData = signData;
   }
 
   public TransactionRequest getTransactionRequest() {
@@ -50,6 +56,10 @@ public class TransactionParams {
 
   public void setContractMethodParams(Map<String, byte[]> contractMethodParams) {
     this.contractMethodParams = contractMethodParams;
+  }
+
+  public byte[] getSignData() {
+    return signData;
   }
 
   @Override

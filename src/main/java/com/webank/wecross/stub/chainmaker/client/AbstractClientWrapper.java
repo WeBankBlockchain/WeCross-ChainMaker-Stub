@@ -2,15 +2,22 @@ package com.webank.wecross.stub.chainmaker.client;
 
 import com.webank.wecross.stub.chainmaker.config.ChainMakerStubConfig;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.chainmaker.pb.common.ChainmakerBlock;
 import org.chainmaker.pb.common.ChainmakerTransaction;
 import org.chainmaker.pb.common.Request;
 import org.chainmaker.pb.common.ResultOuterClass;
 import org.chainmaker.sdk.ChainClient;
 import org.chainmaker.sdk.ChainClientException;
+import org.chainmaker.sdk.RpcServiceClient;
 import org.chainmaker.sdk.User;
 import org.chainmaker.sdk.crypto.ChainMakerCryptoSuiteException;
+import org.chainmaker.sdk.execption.ExceptionType;
 import org.chainmaker.sdk.utils.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractClientWrapper implements ClientWrapper {
 
@@ -18,11 +25,17 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
 
   private final long rpcCallTimeout;
   private final long syncResultTimeout;
+  private final Logger logger = LoggerFactory.getLogger(AbstractClientWrapper.class);
 
   public AbstractClientWrapper(ChainClient client, ChainMakerStubConfig.Chain.RpcClient rpcClient) {
     this.client = client;
     this.rpcCallTimeout = rpcClient.getCallTimeout();
     this.syncResultTimeout = rpcClient.getSyncResultTimeout();
+  }
+
+  @Override
+  public ChainClient getNativeClient() {
+    return client;
   }
 
   @Override
@@ -53,6 +66,46 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
     Request.Payload payload =
         client.invokeContractPayload(Utils.calcContractName(contractName), method, "", params);
     return client.sendContractRequest(payload, null, rpcCallTimeout, syncResultTimeout, user);
+  }
+
+  @Override
+  public ResultOuterClass.TxResponse sendTxRequest(Request.TxRequest signedRequest)
+      throws Exception {
+    ResultOuterClass.TxResponse txResponse;
+    RpcServiceClient rpcServiceClient = null;
+    try {
+      rpcServiceClient = client.getConnectionPool().borrowObject();
+      if (rpcServiceClient == null) {
+        logger.error("all connections no Idle or Ready");
+        throw new ChainClientException(
+            "all connections no Idle or Ready, please reSet connection count",
+            ExceptionType.NOTNORMALCONNECT);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    try {
+      txResponse =
+          rpcServiceClient
+              .getRpcNodeFutureStub()
+              .sendRequest(signedRequest)
+              .get(rpcCallTimeout, TimeUnit.MILLISECONDS);
+      client.getConnectionPool().returnObject(rpcServiceClient);
+    } catch (TimeoutException e) {
+      client.getConnectionPool().invalidateObject(rpcServiceClient);
+      throw new ChainClientException(
+          "connect timeout error : " + e.getMessage(), ExceptionType.TIMEOUT);
+    } catch (InterruptedException e) {
+      client.getConnectionPool().invalidateObject(rpcServiceClient);
+      throw new ChainClientException(
+          "connect interrupted, error : " + e.getMessage(), ExceptionType.INTERRUPTED);
+    } catch (ExecutionException e) {
+      client.getConnectionPool().invalidateObject(rpcServiceClient);
+      throw new ChainClientException(
+          "connect execution error : " + e.getMessage(), ExceptionType.EXECUTION);
+    }
+
+    return txResponse;
   }
 
   @Override

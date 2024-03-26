@@ -53,6 +53,7 @@ public class ChainMakerConnection implements Connection {
     this.functionEncoder = new FunctionEncoder(cryptoSuite);
     this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     this.clientWrapper = clientWrapper;
+
     scheduledExecutorService.scheduleAtFixedRate(
         () -> {
           if (Objects.nonNull(eventHandler)) {
@@ -188,12 +189,13 @@ public class ChainMakerConnection implements Connection {
     try {
       TransactionParams cmRequest =
           objectMapper.readValue(request.getData(), TransactionParams.class);
-      String contractName = cmRequest.getContractName();
-      String contractMethodId = cmRequest.getContractMethodId();
-      Map<String, byte[]> proxyContractMethodParams = cmRequest.getContractMethodParams();
 
-      ResultOuterClass.TxResponse txResponse =
-          clientWrapper.invokeContract(contractName, contractMethodId, proxyContractMethodParams);
+      org.chainmaker.pb.common.Request.TxRequest txRequest =
+          objectMapper.readValue(
+              cmRequest.getSignData(), org.chainmaker.pb.common.Request.TxRequest.class);
+      cmRequest.getSignData();
+
+      ResultOuterClass.TxResponse txResponse = clientWrapper.sendTxRequest(txRequest);
       if (logger.isDebugEnabled()) {
         logger.debug("handleAsyncTransactionRequest: {}", JsonFormat.printer().print(txResponse));
       }
