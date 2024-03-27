@@ -23,10 +23,12 @@
 [[resources]]
     type = 'CM_CONTRACT'
     name = 'WeCrossProxy'
-    value = 'a6e7603f349e13ab4d5f422a55463a845213ed5a'
+    callName = 'WeCrossProxy123'
+    address = 'a6e7603f349e13ab4d5f422a55463a845213ed5a'
     abi = ''
 [[resources]]
     type = 'CM_CONTRACT'
     name = 'WeCrossHub'
-    value = '737d37475b787843dbe1de942acb4bfebf5cb3e5'
+    callName = 'WeCrossHub123'
+    address = '737d37475b787843dbe1de942acb4bfebf5cb3e5'
     abi = ''

@@ -61,12 +61,17 @@ public class ChainMakerConnectionFactory {
     connection.addProperty(
         ChainMakerConstant.CHAIN_MAKER_PROPERTY_STUB_TYPE,
         chainMakerStubConfig.getCommon().getType());
+    connection.addProperty(
+        ChainMakerConstant.CHAIN_MAKER_PROPERTY_CRYPTO_HASH,
+        chainMakerStubConfig.getChain().getCrypto().getHash());
     // from config build resources
     List<ChainMakerStubConfig.Resource> resources = chainMakerStubConfig.getResources();
     if (!resources.isEmpty()) {
       for (ChainMakerStubConfig.Resource resource : resources) {
-        // name->address
-        connection.addProperty(resource.getName(), resource.getValue());
+        // name->callName
+        connection.addProperty(resource.getName(), resource.getCallName());
+        // name+ADDR->address
+        connection.addAddress(resource.getName(), resource.getAddress());
         // name+ABI->abi
         connection.addAbi(resource.getName(), resource.getAbi());
       }

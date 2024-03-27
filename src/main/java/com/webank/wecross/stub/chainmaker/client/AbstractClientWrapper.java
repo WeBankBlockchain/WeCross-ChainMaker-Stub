@@ -15,7 +15,6 @@ import org.chainmaker.sdk.RpcServiceClient;
 import org.chainmaker.sdk.User;
 import org.chainmaker.sdk.crypto.ChainMakerCryptoSuiteException;
 import org.chainmaker.sdk.execption.ExceptionType;
-import org.chainmaker.sdk.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,31 +39,24 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
 
   @Override
   public ResultOuterClass.TxResponse queryContract(
-      String contractName, String method, Map<String, byte[]> params)
+          String contractCallName, String method, Map<String, byte[]> params)
       throws ChainClientException, ChainMakerCryptoSuiteException {
-    return client.queryContract(
-        Utils.calcContractName(contractName), method, null, params, rpcCallTimeout);
+    return client.queryContract(contractCallName, method, null, params, rpcCallTimeout);
   }
 
   @Override
   public ResultOuterClass.TxResponse invokeContract(
-      String contractName, String method, Map<String, byte[]> params)
+          String contractCallName, String method, Map<String, byte[]> params)
       throws ChainClientException, ChainMakerCryptoSuiteException {
     return client.invokeContract(
-        Utils.calcContractName(contractName),
-        method,
-        null,
-        params,
-        rpcCallTimeout,
-        syncResultTimeout);
+            contractCallName, method, null, params, rpcCallTimeout, syncResultTimeout);
   }
 
   @Override
   public ResultOuterClass.TxResponse sendContractRequest(
-      String contractName, String method, Map<String, byte[]> params, User user)
+          String contractCallName, String method, Map<String, byte[]> params, User user)
       throws ChainMakerCryptoSuiteException, ChainClientException {
-    Request.Payload payload =
-        client.invokeContractPayload(Utils.calcContractName(contractName), method, "", params);
+    Request.Payload payload = client.invokeContractPayload(contractCallName, method, "", params);
     return client.sendContractRequest(payload, null, rpcCallTimeout, syncResultTimeout, user);
   }
 

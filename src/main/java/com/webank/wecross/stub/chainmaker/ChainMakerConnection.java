@@ -164,11 +164,11 @@ public class ChainMakerConnection implements Connection {
     try {
       TransactionParams cmRequest =
           objectMapper.readValue(request.getData(), TransactionParams.class);
-      String contractName = cmRequest.getContractName();
+      String contractCallName = cmRequest.getContractCallName();
       String contractMethodId = cmRequest.getContractMethodId();
-      Map<String, byte[]> proxyContractMethodParams = cmRequest.getContractMethodParams();
+      Map<String, byte[]> contractMethodParams = cmRequest.getContractMethodParams();
       ResultOuterClass.TxResponse txResponse =
-          clientWrapper.queryContract(contractName, contractMethodId, proxyContractMethodParams);
+          clientWrapper.queryContract(contractCallName, contractMethodId, contractMethodParams);
       if (logger.isDebugEnabled()) {
         logger.debug("handleAsyncCallRequest: {}", JsonFormat.printer().print(txResponse));
       }
@@ -193,7 +193,6 @@ public class ChainMakerConnection implements Connection {
       org.chainmaker.pb.common.Request.TxRequest txRequest =
           objectMapper.readValue(
               cmRequest.getSignData(), org.chainmaker.pb.common.Request.TxRequest.class);
-      cmRequest.getSignData();
 
       ResultOuterClass.TxResponse txResponse = clientWrapper.sendTxRequest(txRequest);
       if (logger.isDebugEnabled()) {
@@ -335,5 +334,17 @@ public class ChainMakerConnection implements Connection {
 
   public String getAbi(String key) {
     return getProperty(key + ChainMakerConstant.CHAIN_MAKER_PROPERTY_ABI_SUFFIX);
+  }
+
+  public void addAddress(String key, String value) {
+    addProperty(key + ChainMakerConstant.CHAIN_MAKER_PROPERTY_ADDRESS_SUFFIX, value);
+  }
+
+  public String getAddress(String key) {
+    return getProperty(key + ChainMakerConstant.CHAIN_MAKER_PROPERTY_ADDRESS_SUFFIX);
+  }
+
+  public AbstractClientWrapper getClientWrapper() {
+    return clientWrapper;
   }
 }

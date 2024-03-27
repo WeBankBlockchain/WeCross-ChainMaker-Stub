@@ -189,7 +189,8 @@ public class ChainMakerStubConfig {
   public static class Resource {
     private String type;
     private String name;
-    private String value;
+    private String callName;
+    private String address;
     private String abi;
 
     public String getType() {
@@ -208,12 +209,20 @@ public class ChainMakerStubConfig {
       this.name = name;
     }
 
-    public String getValue() {
-      return value;
+    public String getCallName() {
+      return callName;
     }
 
-    public void setValue(String value) {
-      this.value = value;
+    public void setCallName(String callName) {
+      this.callName = callName;
+    }
+
+    public String getAddress() {
+      return address;
+    }
+
+    public void setAddress(String address) {
+      this.address = address;
     }
 
     public String getAbi() {
@@ -233,8 +242,11 @@ public class ChainMakerStubConfig {
           + ", name='"
           + name
           + '\''
-          + ", value='"
-          + value
+          + ", callName='"
+          + callName
+          + '\''
+          + ", address='"
+          + address
           + '\''
           + ", abi='"
           + abi
@@ -273,7 +285,17 @@ public class ChainMakerStubConfig {
       ResourceInfo resourceInfo = new ResourceInfo();
       resourceInfo.setName(resource.getName());
       resourceInfo.setStubType(this.getCommon().getType());
-      resourceInfo.getProperties().put(resource.getName(), resource.getValue());
+      resourceInfo.getProperties().put(resource.getName(), resource.getCallName());
+      resourceInfo
+          .getProperties()
+          .put(
+              resource.getName() + ChainMakerConstant.CHAIN_MAKER_PROPERTY_ADDRESS_SUFFIX,
+              resource.getAddress());
+      resourceInfo
+          .getProperties()
+          .put(
+              resource.getName() + ChainMakerConstant.CHAIN_MAKER_PROPERTY_ABI_SUFFIX,
+              resource.getAbi());
       resourceInfo
           .getProperties()
           .put(ChainMakerConstant.CHAIN_MAKER_PROPERTY_CHAIN_ID, this.getChain().getChainId());
