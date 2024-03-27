@@ -157,7 +157,7 @@ public class FunctionUtility {
             new Utf8String(uid),
             new Utf8String(tid),
             new Uint256(seq),
-            new Utf8String(contractAddress),
+            new Address(contractAddress),
             new Utf8String(methodSignature),
             new DynamicBytes(abi)),
         Collections.emptyList());
