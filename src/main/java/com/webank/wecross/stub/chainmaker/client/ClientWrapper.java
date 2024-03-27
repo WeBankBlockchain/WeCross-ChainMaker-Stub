@@ -3,12 +3,16 @@ package com.webank.wecross.stub.chainmaker.client;
 import java.util.Map;
 import org.chainmaker.pb.common.ChainmakerBlock;
 import org.chainmaker.pb.common.ChainmakerTransaction;
+import org.chainmaker.pb.common.Request;
 import org.chainmaker.pb.common.ResultOuterClass;
+import org.chainmaker.sdk.ChainClient;
 import org.chainmaker.sdk.ChainClientException;
 import org.chainmaker.sdk.User;
 import org.chainmaker.sdk.crypto.ChainMakerCryptoSuiteException;
 
 public interface ClientWrapper {
+
+  ChainClient getNativeClient();
 
   ResultOuterClass.TxResponse invokeContract(
       String contractName, String method, Map<String, byte[]> params)
@@ -17,6 +21,8 @@ public interface ClientWrapper {
   ResultOuterClass.TxResponse sendContractRequest(
       String contractName, String method, Map<String, byte[]> params, User user)
       throws ChainMakerCryptoSuiteException, ChainClientException;
+
+  ResultOuterClass.TxResponse sendTxRequest(Request.TxRequest signedRequest) throws Exception;
 
   ResultOuterClass.TxResponse queryContract(
       String contractName, String method, Map<String, byte[]> params)

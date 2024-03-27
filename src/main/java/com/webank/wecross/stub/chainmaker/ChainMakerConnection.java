@@ -2,7 +2,6 @@ package com.webank.wecross.stub.chainmaker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.ObjectMapperFactory;
@@ -14,11 +13,10 @@ import com.webank.wecross.stub.chainmaker.common.ChainMakerConstant;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerRequestType;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerStatusCode;
 import com.webank.wecross.stub.chainmaker.protocal.TransactionParams;
+import com.webank.wecross.stub.chainmaker.utils.FunctionUtility;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,13 +28,12 @@ import java.util.concurrent.TimeUnit;
 import org.chainmaker.pb.common.ChainmakerBlock;
 import org.chainmaker.pb.common.ChainmakerTransaction;
 import org.chainmaker.pb.common.ResultOuterClass;
+import org.fisco.bcos.sdk.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.abi.datatypes.Function;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.utils.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Array;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Utf8String;
 
 public class ChainMakerConnection implements Connection {
   private static final Logger logger = LoggerFactory.getLogger(ChainMakerConnection.class);
@@ -47,11 +44,16 @@ public class ChainMakerConnection implements Connection {
   private ConnectionEventHandler eventHandler;
   private final Map<String, String> properties = new HashMap<>();
   private final AbstractClientWrapper clientWrapper;
+  private final FunctionEncoder functionEncoder;
 
   public ChainMakerConnection(
-      AbstractClientWrapper clientWrapper, ScheduledExecutorService scheduledExecutorService) {
+      CryptoSuite cryptoSuite,
+      AbstractClientWrapper clientWrapper,
+      ScheduledExecutorService scheduledExecutorService) {
+    this.functionEncoder = new FunctionEncoder(cryptoSuite);
     this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     this.clientWrapper = clientWrapper;
+
     scheduledExecutorService.scheduleAtFixedRate(
         () -> {
           if (Objects.nonNull(eventHandler)) {
@@ -162,12 +164,11 @@ public class ChainMakerConnection implements Connection {
     try {
       TransactionParams cmRequest =
           objectMapper.readValue(request.getData(), TransactionParams.class);
-      String proxyContractName = cmRequest.getContractName();
-      String proxyContractMethod = cmRequest.getContractMethod();
+      String contractName = cmRequest.getContractName();
+      String contractMethodId = cmRequest.getContractMethodId();
       Map<String, byte[]> proxyContractMethodParams = cmRequest.getContractMethodParams();
       ResultOuterClass.TxResponse txResponse =
-          clientWrapper.queryContract(
-              proxyContractName, proxyContractMethod, proxyContractMethodParams);
+          clientWrapper.queryContract(contractName, contractMethodId, proxyContractMethodParams);
       if (logger.isDebugEnabled()) {
         logger.debug("handleAsyncCallRequest: {}", JsonFormat.printer().print(txResponse));
       }
@@ -188,13 +189,13 @@ public class ChainMakerConnection implements Connection {
     try {
       TransactionParams cmRequest =
           objectMapper.readValue(request.getData(), TransactionParams.class);
-      String proxyContractName = cmRequest.getContractName();
-      String proxyContractMethod = cmRequest.getContractMethod();
-      Map<String, byte[]> proxyContractMethodParams = cmRequest.getContractMethodParams();
 
-      ResultOuterClass.TxResponse txResponse =
-          clientWrapper.invokeContract(
-              proxyContractName, proxyContractMethod, proxyContractMethodParams);
+      org.chainmaker.pb.common.Request.TxRequest txRequest =
+          objectMapper.readValue(
+              cmRequest.getSignData(), org.chainmaker.pb.common.Request.TxRequest.class);
+      cmRequest.getSignData();
+
+      ResultOuterClass.TxResponse txResponse = clientWrapper.sendTxRequest(txRequest);
       if (logger.isDebugEnabled()) {
         logger.debug("handleAsyncTransactionRequest: {}", JsonFormat.printer().print(txResponse));
       }
@@ -231,7 +232,6 @@ public class ChainMakerConnection implements Connection {
           }
         };
 
-    // from proxy contract
     String[] paths = listPaths();
     if (Objects.nonNull(paths)) {
       for (String path : paths) {
@@ -257,27 +257,27 @@ public class ChainMakerConnection implements Connection {
   }
 
   public String[] listPaths() {
-    String proxyContactName = getProperty(ChainMakerConstant.CHAIN_MAKER_PROXY_NAME);
-    Function function =
-        new Function(
-            ChainMakerConstant.PROXY_METHOD_GET_PATHS,
-            Collections.emptyList(),
-            Arrays.asList(new TypeReference<Array<Utf8String>>() {}));
-    Map<String, byte[]> params = new HashMap<>();
-    String methodDataStr = FunctionEncoder.encode(function);
-    String method = methodDataStr.substring(0, 10);
-    params.put(ChainMakerConstant.CHAIN_MAKER_CONTRACT_ARGS_EVM_PARAM, methodDataStr.getBytes());
     try {
+      Function function =
+          FunctionUtility.newDefaultFunction(ChainMakerConstant.PROXY_METHOD_GET_PATHS, null);
+      String methodDataStr = functionEncoder.encode(function);
+      String methodId =
+          functionEncoder.buildMethodId(
+              FunctionEncoder.buildMethodSignature(
+                  function.getName(), function.getInputParameters()));
+      Map<String, byte[]> params = new HashMap<>();
+      params.put(ChainMakerConstant.CHAIN_MAKER_CONTRACT_ARGS_EVM_PARAM, methodDataStr.getBytes());
       ResultOuterClass.TxResponse responseInfo =
-          clientWrapper.queryContract(proxyContactName, method, params);
+          clientWrapper.queryContract(
+              getProperty(ChainMakerConstant.CHAIN_MAKER_PROXY_NAME), methodId, params);
       if (Objects.equals(
           responseInfo.getCode().getNumber(), ResultOuterClass.TxStatusCode.SUCCESS.getNumber())) {
         logger.warn("listPaths failed, status {}", responseInfo.getCode().getNumber());
         return null;
       }
-      // TODO 解析返回结果
-      ByteString result = responseInfo.getContractResult().getResult();
-      String[] paths = new String[] {};
+      String[] paths =
+          FunctionUtility.decodeDefaultOutput(
+              Hex.toHexString(responseInfo.getContractResult().getResult().toByteArray()));
       Set<String> set = new LinkedHashSet<>();
       set.add("a.b." + ChainMakerConstant.CHAIN_MAKER_PROXY_NAME);
       set.add("a.b." + ChainMakerConstant.CHAIN_MAKER_HUB_NAME);
@@ -327,5 +327,13 @@ public class ChainMakerConnection implements Connection {
 
   public String getProperty(String key) {
     return this.properties.get(key);
+  }
+
+  public void addAbi(String key, String value) {
+    addProperty(key + ChainMakerConstant.CHAIN_MAKER_PROPERTY_ABI_SUFFIX, value);
+  }
+
+  public String getAbi(String key) {
+    return getProperty(key + ChainMakerConstant.CHAIN_MAKER_PROPERTY_ABI_SUFFIX);
   }
 }

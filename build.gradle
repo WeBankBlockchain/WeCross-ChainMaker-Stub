@@ -94,9 +94,9 @@ dependencies {
 
     implementation 'org.chainmaker:chainmaker-sdk-java:2.3.2'
     implementation 'com.google.protobuf:protobuf-java-util:3.22.2'
-    implementation 'org.web3j:abi:5.0.0', {
-        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
-    }
+    implementation 'com.google.guava:guava:32.0.1-jre'
+    implementation 'org.apache.commons:commons-pool2:2.11.1'
+    implementation 'io.grpc:grpc-stub:1.53.0'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13.2'

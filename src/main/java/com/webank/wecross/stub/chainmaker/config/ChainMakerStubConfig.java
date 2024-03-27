@@ -4,6 +4,9 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerConstant;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.CryptoType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +16,16 @@ public class ChainMakerStubConfig {
   private Common common;
   private Chain chain;
   private List<Resource> resources;
+
+  public boolean isGMStub() {
+    return StringUtils.containsIgnoreCase(common.getType(), ChainMakerConstant.GM_STUB_SUFFIX);
+  }
+
+  public CryptoSuite getStubCryptoSuite() {
+    return isGMStub()
+        ? new CryptoSuite(CryptoType.SM_TYPE)
+        : new CryptoSuite(CryptoType.ECDSA_TYPE);
+  }
 
   public static class Common {
     private String name;
@@ -174,18 +187,10 @@ public class ChainMakerStubConfig {
   }
 
   public static class Resource {
-    private String name;
     private String type;
+    private String name;
     private String value;
-    private String path;
-
-    public String getName() {
-      return name;
-    }
-
-    public void setName(String name) {
-      this.name = name;
-    }
+    private String abi;
 
     public String getType() {
       return type;
@@ -193,6 +198,14 @@ public class ChainMakerStubConfig {
 
     public void setType(String type) {
       this.type = type;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
     }
 
     public String getValue() {
@@ -203,28 +216,28 @@ public class ChainMakerStubConfig {
       this.value = value;
     }
 
-    public String getPath() {
-      return path;
+    public String getAbi() {
+      return abi;
     }
 
-    public void setPath(String path) {
-      this.path = path;
+    public void setAbi(String abi) {
+      this.abi = abi;
     }
 
     @Override
     public String toString() {
       return "Resource{"
-          + "name='"
-          + name
-          + '\''
-          + ", type='"
+          + "type='"
           + type
+          + '\''
+          + ", name='"
+          + name
           + '\''
           + ", value='"
           + value
           + '\''
-          + ", path='"
-          + path
+          + ", abi='"
+          + abi
           + '\''
           + '}';
     }

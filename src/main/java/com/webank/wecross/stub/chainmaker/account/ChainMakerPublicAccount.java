@@ -1,19 +1,21 @@
 package com.webank.wecross.stub.chainmaker.account;
 
 import com.webank.wecross.stub.Account;
+import org.chainmaker.pb.config.ChainConfigOuterClass;
+import org.chainmaker.sdk.User;
+import org.chainmaker.sdk.utils.CryptoUtils;
 
 public class ChainMakerPublicAccount implements Account {
   private final String name;
   private final String type;
-  private final String publicKey;
+  private final User user;
   private int keyID;
   private boolean isDefault;
 
-  // FIXME: privateKey format
-  public ChainMakerPublicAccount(String name, String type, String publicKey) {
+  public ChainMakerPublicAccount(String name, String type, User user) {
     this.name = name;
     this.type = type;
-    this.publicKey = publicKey;
+    this.user = user;
   }
 
   @Override
@@ -28,8 +30,8 @@ public class ChainMakerPublicAccount implements Account {
 
   @Override
   public String getIdentity() {
-    // TODO: get address
-    return publicKey;
+    return CryptoUtils.pkToAddrStr(
+        user.getPublicKey(), ChainConfigOuterClass.AddrType.ETHEREUM, "");
   }
 
   @Override
@@ -40,5 +42,9 @@ public class ChainMakerPublicAccount implements Account {
   @Override
   public boolean isDefault() {
     return isDefault;
+  }
+
+  public User getUser() {
+    return user;
   }
 }

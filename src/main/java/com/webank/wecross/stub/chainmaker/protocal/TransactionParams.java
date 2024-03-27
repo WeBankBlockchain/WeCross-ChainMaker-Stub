@@ -6,18 +6,24 @@ import java.util.Map;
 public class TransactionParams {
   private TransactionRequest transactionRequest;
   private String contractName;
-  private String contractMethod;
+  private String contractMethodId;
   private Map<String, byte[]> contractMethodParams;
+  private byte[] signData;
 
   public TransactionParams(
       TransactionRequest transactionRequest,
       String contractName,
-      String contractMethod,
+      String contractMethodId,
       Map<String, byte[]> contractMethodParams) {
     this.transactionRequest = transactionRequest;
     this.contractName = contractName;
-    this.contractMethod = contractMethod;
+    this.contractMethodId = contractMethodId;
     this.contractMethodParams = contractMethodParams;
+  }
+
+  public TransactionParams(TransactionRequest transactionRequest, byte[] signData) {
+    this.transactionRequest = transactionRequest;
+    this.signData = signData;
   }
 
   public TransactionRequest getTransactionRequest() {
@@ -36,12 +42,12 @@ public class TransactionParams {
     this.contractName = contractName;
   }
 
-  public String getContractMethod() {
-    return contractMethod;
+  public String getContractMethodId() {
+    return contractMethodId;
   }
 
-  public void setContractMethod(String contractMethod) {
-    this.contractMethod = contractMethod;
+  public void setContractMethodId(String contractMethodId) {
+    this.contractMethodId = contractMethodId;
   }
 
   public Map<String, byte[]> getContractMethodParams() {
@@ -52,18 +58,22 @@ public class TransactionParams {
     this.contractMethodParams = contractMethodParams;
   }
 
+  public byte[] getSignData() {
+    return signData;
+  }
+
   @Override
   public String toString() {
     return "TransactionParams{"
         + "transactionRequest="
         + transactionRequest
-        + ", proxyContractName='"
+        + ", contractName='"
         + contractName
         + '\''
-        + ", proxyContractMethod='"
-        + contractMethod
+        + ", contractMethod='"
+        + contractMethodId
         + '\''
-        + ", proxyContractMethodParams="
+        + ", contractMethodParams="
         + contractMethodParams
         + '}';
   }
