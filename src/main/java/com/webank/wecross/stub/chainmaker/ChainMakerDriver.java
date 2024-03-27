@@ -2,6 +2,7 @@ package com.webank.wecross.stub.chainmaker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.Block;
 import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
@@ -10,18 +11,23 @@ import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.StubConstant;
+import com.webank.wecross.stub.Transaction;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.chainmaker.account.ChainMakerPublicAccount;
+import com.webank.wecross.stub.chainmaker.client.ClientUtility;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerConstant;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerRequestType;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerStatusCode;
 import com.webank.wecross.stub.chainmaker.common.ChainMakerStubException;
 import com.webank.wecross.stub.chainmaker.protocal.TransactionParams;
+import com.webank.wecross.stub.chainmaker.protocal.TransactionProof;
+import com.webank.wecross.stub.chainmaker.utils.BlockUtility;
 import com.webank.wecross.stub.chainmaker.utils.FunctionUtility;
 import com.webank.wecross.stub.chainmaker.utils.RevertMessage;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,12 +36,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.chainmaker.pb.common.ChainmakerBlock;
+import org.chainmaker.pb.common.ChainmakerTransaction;
 import org.chainmaker.pb.common.ResultOuterClass;
+import org.chainmaker.sdk.User;
+import org.chainmaker.sdk.utils.CryptoUtils;
 import org.chainmaker.sdk.utils.Utils;
 import org.fisco.bcos.sdk.abi.ABICodec;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
 import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple3;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple6;
 import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
 import org.fisco.bcos.sdk.abi.wrapper.ABIDefinition;
 import org.fisco.bcos.sdk.abi.wrapper.ABIDefinitionFactory;
@@ -161,7 +173,7 @@ public class ChainMakerDriver implements Driver {
                   parseChainMakerTransaction(chainMakerTx, block, connection);
                 }
               }
-              //TODO: block header validation
+              // TODO: block header validation
 
               callback.onResponse(null, block);
             } catch (Exception e) {
@@ -266,7 +278,218 @@ public class ChainMakerDriver implements Driver {
       BlockManager blockManager,
       boolean isVerified,
       Connection connection,
-      GetTransactionCallback callback) {}
+      GetTransactionCallback callback) {
+    asyncRequestTransactionProof(
+        transactionHash,
+        connection,
+        (exception, proof) -> {
+          if (Objects.nonNull(exception)) {
+            logger.warn("transactionHash: {} exception: ", transactionHash, exception);
+            callback.onResponse(exception, null);
+            return;
+          }
+          if (blockNumber != proof.getTransactionInfo().getBlockHeight()) {
+            callback.onResponse(
+                new Exception("Transaction hash does not match the block number"), null);
+            return;
+          }
+          if (isVerified) {
+            // TODO:  merkle validation need add
+
+          } else {
+            assembleTransaction(transactionHash, proof.getTransactionInfo(), null, callback);
+          }
+        });
+  }
+
+  private void assembleTransaction(
+      String transactionHash,
+      ChainmakerTransaction.TransactionInfo transactionInfo,
+      Block block,
+      GetTransactionCallback callback) {
+    try {
+      String methodId;
+      String input;
+      String xaTransactionID = "0";
+      long xaTransactionSeq = 0;
+      String path;
+      String resource;
+      ChainmakerTransaction.Transaction chainmakerTransaction = transactionInfo.getTransaction();
+      org.chainmaker.pb.common.Request.Payload payload = chainmakerTransaction.getPayload();
+      String txId = chainmakerTransaction.getPayload().getTxId();
+      Transaction transaction = new Transaction();
+      // TODO: receipt and txRes
+      //      transaction.setReceiptBytes();
+      //      transaction.setTxBytes();
+      String memberInfo =
+          chainmakerTransaction.getSender().getSigner().getMemberInfo().toStringUtf8();
+      String userAddr = CryptoUtils.getEVMAddressFromPKPEM(memberInfo, "SHA256", "EC");
+      transaction.setAccountIdentity(userAddr);
+      transaction.setTransactionByProxy(true);
+      transaction.getTransactionResponse().setHash(txId);
+      if (block != null && block.getBlockHeader() != null) {
+        transaction.getTransactionResponse().setTimestamp(block.getBlockHeader().getTimestamp());
+      }
+
+      String proxyInput = payload.getParametersList().get(0).getValue().toStringUtf8();
+      String proxyOutput = Hex.toHexString(chainmakerTransaction.getResult().toByteArray());
+      if (proxyInput.startsWith(functionEncoder.buildMethodId(FunctionUtility.ProxySendTXMethod))) {
+        Tuple3<String, String, byte[]> proxyResult =
+            FunctionUtility.getSendTransactionProxyWithoutTxIdFunctionInput(proxyInput);
+        resource = proxyResult.getValue2();
+        input = Numeric.toHexString(proxyResult.getValue3());
+        methodId = input.substring(0, FunctionUtility.MethodIDWithHexPrefixLength);
+        input = input.substring(FunctionUtility.MethodIDWithHexPrefixLength);
+
+        if (logger.isDebugEnabled()) {
+          logger.debug("  resource: {}, methodId: {}", resource, methodId);
+        }
+      } else if (proxyInput.startsWith(
+          functionEncoder.buildMethodId(FunctionUtility.ProxySendTransactionTXMethod))) {
+        Tuple6<String, String, BigInteger, String, String, byte[]> proxyInputResult =
+            FunctionUtility.getSendTransactionProxyFunctionInput(proxyInput);
+
+        xaTransactionID = proxyInputResult.getValue2();
+        xaTransactionSeq = proxyInputResult.getValue3().longValue();
+        path = proxyInputResult.getValue4();
+        resource = Path.decode(path).getResource();
+        String methodSig = proxyInputResult.getValue5();
+        input = Numeric.toHexString(proxyInputResult.getValue6());
+        methodId = functionEncoder.buildMethodId(methodSig);
+
+        if (logger.isDebugEnabled()) {
+          logger.debug(
+              "xaTransactionID: {}, xaTransactionSeq: {}, path: {}, methodSig: {}, methodId: {}",
+              xaTransactionID,
+              xaTransactionSeq,
+              path,
+              methodSig,
+              methodId);
+        }
+      } else {
+        // transaction not send by proxy
+        transaction.setTransactionByProxy(false);
+        callback.onResponse(null, transaction);
+        return;
+      }
+
+      transaction
+          .getTransactionRequest()
+          .getOptions()
+          .put(StubConstant.XA_TRANSACTION_ID, xaTransactionID);
+      transaction
+          .getTransactionRequest()
+          .getOptions()
+          .put(StubConstant.XA_TRANSACTION_SEQ, xaTransactionSeq);
+      transaction.setResource(resource);
+
+      String finalMethodId = methodId;
+      String finalInput = input;
+      // TODO: get abi
+      String abi = "";
+
+      ABIDefinition function =
+          abiDefinitionFactory.loadABI(abi).getMethodIDToFunctions().get(finalMethodId);
+
+      if (Objects.isNull(function)) {
+        logger.warn("Maybe abi is upgraded, Load function failed, methodId: {}", finalMethodId);
+
+        callback.onResponse(null, transaction);
+        return;
+      }
+
+      ABIObject inputObject = ABIObjectFactory.createInputObject(function);
+      List<String> inputParams = codecJsonWrapper.decode(inputObject, finalInput);
+      transaction.getTransactionRequest().setMethod(function.getName());
+      transaction.getTransactionRequest().setArgs(inputParams.toArray(new String[0]));
+
+      if (transactionInfo.getTransaction().getResult().getCode().getNumber()
+          == ResultOuterClass.TxStatusCode.SUCCESS.getNumber()) {
+        transaction
+            .getTransactionResponse()
+            .setMessage(ChainMakerStatusCode.getStatusMessage(ChainMakerStatusCode.Success));
+
+        ABIObject outputObject = ABIObjectFactory.createOutputObject(function);
+        List<String> outputParams =
+            codecJsonWrapper.decode(outputObject, proxyOutput.substring(130));
+        /** decode output from output */
+        transaction.getTransactionResponse().setResult(outputParams.toArray(new String[0]));
+        byte[] proxyBytesOutput =
+            FunctionUtility.decodeProxyBytesOutput(
+                Hex.toHexString(
+                    chainmakerTransaction
+                        .getResult()
+                        .getContractResult()
+                        .getResult()
+                        .toByteArray()));
+        transaction
+            .getTransactionResponse()
+            .setResult(
+                codecJsonWrapper
+                    .decode(outputObject, Hex.toHexString(proxyBytesOutput))
+                    .toArray(new String[0]));
+      }
+      transaction
+          .getTransactionResponse()
+          .setErrorCode(chainmakerTransaction.getResult().getCode().getNumber());
+      transaction
+          .getTransactionResponse()
+          .setMessage(chainmakerTransaction.getResult().getMessage());
+      if (logger.isTraceEnabled()) {
+        logger.trace("transactionHash: {}, transaction: {}", transactionHash, transaction);
+      }
+
+      callback.onResponse(null, transaction);
+
+    } catch (Exception e) {
+      logger.warn("transactionHash: {}, exception: ", transactionHash, e);
+      callback.onResponse(e, null);
+    }
+  }
+
+  private interface RequestTransactionProofCallback {
+    void onResponse(ChainMakerStubException e, TransactionProof proof);
+  }
+
+  /**
+   * @param transactionHash
+   * @param connection
+   */
+  private void asyncRequestTransactionProof(
+      String transactionHash, Connection connection, RequestTransactionProofCallback callback) {
+
+    Request request =
+        Request.newRequest(ChainMakerRequestType.GET_TRANSACTION_PROOF, transactionHash);
+    connection.asyncSend(
+        request,
+        response -> {
+          try {
+            if (logger.isDebugEnabled()) {
+              logger.debug("Request proof, transactionHash: {}", transactionHash);
+            }
+
+            if (response.getErrorCode() != ChainMakerStatusCode.Success) {
+              callback.onResponse(
+                  new ChainMakerStubException(response.getErrorCode(), response.getErrorMessage()),
+                  null);
+              return;
+            }
+            // TODO: merkle validation need add
+            TransactionProof transactionProof =
+                objectMapper.readValue(response.getData(), TransactionProof.class);
+            if (logger.isDebugEnabled()) {
+              logger.debug(
+                  " transactionHash: {}, transactionProof: {}", transactionHash, transactionProof);
+            }
+
+            callback.onResponse(null, transactionProof);
+          } catch (Exception e) {
+            callback.onResponse(
+                new ChainMakerStubException(ChainMakerStatusCode.UnclassifiedError, e.getMessage()),
+                null);
+          }
+        });
+  }
 
   @Override
   public void asyncCustomCommand(
