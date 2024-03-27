@@ -39,9 +39,9 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.chainmaker.pb.common.ChainmakerBlock;
 import org.chainmaker.pb.common.ChainmakerTransaction;
 import org.chainmaker.pb.common.ResultOuterClass;
+import org.chainmaker.sdk.ChainClient;
 import org.chainmaker.sdk.User;
 import org.chainmaker.sdk.utils.CryptoUtils;
-import org.chainmaker.sdk.utils.Utils;
 import org.fisco.bcos.sdk.abi.ABICodec;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
@@ -517,18 +517,23 @@ public class ChainMakerDriver implements Driver {
       Connection connection,
       Callback callback) {
     TransactionResponse transactionResponse = new TransactionResponse();
-    Map<String, String> properties = connection.getProperties();
-
-    // TODO: check properties
     try {
-      String contractAddress = properties.get(ChainMakerConstant.CHAIN_MAKER_PROXY_NAME);
+      ChainMakerConnection chainMakerConnection = (ChainMakerConnection) connection;
+      Map<String, String> properties = chainMakerConnection.getProperties();
+
+      checkProperties(properties);
+
+      String proxyContractCallName =
+          chainMakerConnection.getProperty(ChainMakerConstant.CHAIN_MAKER_PROXY_NAME);
       Path path = context.getPath();
       String name = path.getResource();
+      // contract client call name
+      String contractCallName = chainMakerConnection.getProperty(name);
+      String contractAbi = chainMakerConnection.getAbi(name);
+      // contract evm call address
+      String contractAddress = chainMakerConnection.getAddress(name);
 
-      // TODO: get Abi by name
-      String abi = ""; // resources abi
-
-      if (abi == null) {
+      if (contractAbi == null) {
         throw new ChainMakerStubException(
             ChainMakerStatusCode.ABINotExist, "resource ABI not exist: " + name);
       }
@@ -536,7 +541,7 @@ public class ChainMakerDriver implements Driver {
       String[] args = request.getArgs();
       String method = request.getMethod();
 
-      ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(abi);
+      ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(contractAbi);
       ABIDefinition abiDefinition =
           contractABIDefinition.getFunctions().get(method).stream()
               .filter(function -> function.getInputs().size() == (args == null ? 0 : args.length))
@@ -549,18 +554,17 @@ public class ChainMakerDriver implements Driver {
       byte[] encodedArgs =
           Hex.decode(
               abiCodec.encodeMethodFromString(
-                  abi, method, args != null ? Arrays.asList(args) : new ArrayList<>()));
+                  contractAbi, method, args != null ? Arrays.asList(args) : new ArrayList<>()));
       String transactionID = (String) request.getOptions().get(StubConstant.XA_TRANSACTION_ID);
 
       Function function;
       String proxyMethod;
 
       if (Objects.isNull(transactionID) || transactionID.isEmpty() || "0".equals(transactionID)) {
-
         function =
             FunctionUtility.newConstantCallProxyFunction(
                 functionEncoder,
-                path.getResource(),
+                contractAddress,
                 abiDefinition.getMethodSignatureAsString(),
                 encodedArgs);
         proxyMethod = FunctionUtility.ProxyCallMethod;
@@ -568,7 +572,7 @@ public class ChainMakerDriver implements Driver {
         function =
             FunctionUtility.newConstantCallProxyFunction(
                 transactionID,
-                path.toString(),
+                contractAddress,
                 abiDefinition.getMethodSignatureAsString(),
                 encodedArgs);
         proxyMethod = FunctionUtility.ProxyCallWithTransactionIdMethod;
@@ -576,11 +580,12 @@ public class ChainMakerDriver implements Driver {
 
       if (logger.isDebugEnabled()) {
         logger.debug(
-            " name:{}, address: {}, method: {}, args: {}",
-            ChainMakerConstant.CHAIN_MAKER_PROXY_NAME,
+            " name:{},callName:{}, address: {}, method: {}, args: {}",
+            name,
+            contractCallName,
             contractAddress,
-            request.getMethod(),
-            request.getArgs());
+            method,
+            args);
       }
 
       Map<String, byte[]> params = new HashMap<>();
@@ -590,10 +595,7 @@ public class ChainMakerDriver implements Driver {
 
       TransactionParams transaction =
           new TransactionParams(
-              request,
-              ChainMakerConstant.CHAIN_MAKER_PROXY_NAME,
-              functionEncoder.buildMethodId(proxyMethod),
-              params);
+              request, proxyContractCallName, functionEncoder.buildMethodId(proxyMethod), params);
 
       Request req =
           Request.newRequest(
@@ -672,17 +674,21 @@ public class ChainMakerDriver implements Driver {
       Connection connection,
       Callback callback) {
     TransactionResponse transactionResponse = new TransactionResponse();
-    // Map<String, String> properties = connection.getProperties();
-
-    // TODO: check properties
     try {
+      ChainMakerConnection chainMakerConnection = (ChainMakerConnection) connection;
+      Map<String, String> properties = chainMakerConnection.getProperties();
+
+      checkProperties(properties);
+
       Path path = context.getPath();
       String name = path.getResource();
+      // contract client call name
+      String contractCallName = chainMakerConnection.getProperty(name);
+      String contractAbi = chainMakerConnection.getAbi(name);
+      // contract evm call address
+      String contractAddress = chainMakerConnection.getAddress(name);
 
-      // TODO: get Abi by name
-      String abi = ""; // resources abi
-
-      if (abi == null) {
+      if (contractAbi == null) {
         throw new ChainMakerStubException(
             ChainMakerStatusCode.ABINotExist, "resource ABI not exist: " + name);
       }
@@ -691,7 +697,7 @@ public class ChainMakerDriver implements Driver {
       String[] args = request.getArgs();
       String method = request.getMethod();
 
-      ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(abi);
+      ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(contractAbi);
       ABIDefinition abiDefinition =
           contractABIDefinition.getFunctions().get(method).stream()
               .filter(function -> function.getInputs().size() == (args == null ? 0 : args.length))
@@ -704,15 +710,16 @@ public class ChainMakerDriver implements Driver {
       byte[] encodedArgs =
           Hex.decode(
               abiCodec.encodeMethodFromString(
-                  abi, method, args != null ? Arrays.asList(args) : new ArrayList<>()));
+                  contractAbi, method, args != null ? Arrays.asList(args) : new ArrayList<>()));
 
       if (logger.isDebugEnabled()) {
         logger.debug(
-            " name:{}, address: {}, method: {}, args: {}",
+            " name:{},callName:{}, address: {}, method: {}, args: {}",
             name,
-            Utils.calcContractName(name),
-            request.getMethod(),
-            request.getArgs());
+            contractCallName,
+            contractAddress,
+            method,
+            args);
       }
 
       Map<String, byte[]> params = new HashMap<>();
@@ -721,7 +728,7 @@ public class ChainMakerDriver implements Driver {
       TransactionParams transaction =
           new TransactionParams(
               request,
-              name,
+              contractCallName,
               functionEncoder.buildMethodId(abiDefinition.getMethodSignatureAsString()),
               params);
       Request req =
@@ -801,27 +808,35 @@ public class ChainMakerDriver implements Driver {
       Connection connection,
       Callback callback) {
     TransactionResponse transactionResponse = new TransactionResponse();
-    Map<String, String> properties = connection.getProperties();
     try {
-      // TODO: check properties
-      String contractAddress = properties.get(ChainMakerConstant.CHAIN_MAKER_PROXY_NAME);
+      ChainMakerConnection chainMakerConnection = (ChainMakerConnection) connection;
+      Map<String, String> properties = chainMakerConnection.getProperties();
+
+      checkProperties(properties);
+
+      String proxyContractCallName =
+          chainMakerConnection.getProperty(ChainMakerConstant.CHAIN_MAKER_PROXY_NAME);
       Path path = context.getPath();
       String name = path.getResource();
+      // contract client call name
+      String contractCallName = chainMakerConnection.getProperty(name);
+      String contractAbi = chainMakerConnection.getAbi(name);
+      // contract evm call address
+      String contractAddress = chainMakerConnection.getAddress(name);
 
-      ChainMakerPublicAccount account = (ChainMakerPublicAccount) context.getAccount();
-      User user = account.getUser();
-      // TODO: get abi by name
-      String abi = "";
-      if (abi == null) {
+      if (contractAbi == null) {
         throw new ChainMakerStubException(
             ChainMakerStatusCode.ABINotExist, "resource:" + name + " not exist");
       }
+
+      ChainMakerPublicAccount account = (ChainMakerPublicAccount) context.getAccount();
+      User user = account.getUser();
 
       // encode
       String[] args = request.getArgs();
       String method = request.getMethod();
 
-      ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(abi);
+      ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(contractAbi);
       ABIDefinition abiDefinition =
           contractABIDefinition.getFunctions().get(method).stream()
               .filter(function -> function.getInputs().size() == (args == null ? 0 : args.length))
@@ -834,7 +849,7 @@ public class ChainMakerDriver implements Driver {
       byte[] encodedArgs =
           Hex.decode(
               abiCodec.encodeMethodFromString(
-                  abi, method, args != null ? Arrays.asList(args) : new ArrayList<>()));
+                  contractAbi, method, args != null ? Arrays.asList(args) : new ArrayList<>()));
 
       String uniqueID = (String) request.getOptions().get(StubConstant.TRANSACTION_UNIQUE_ID);
       String uid =
@@ -843,44 +858,58 @@ public class ChainMakerDriver implements Driver {
       String transactionID = (String) request.getOptions().get(StubConstant.XA_TRANSACTION_ID);
 
       Long transactionSeq = (Long) request.getOptions().get(StubConstant.XA_TRANSACTION_SEQ);
-      Long seq = Objects.isNull(transactionSeq) ? 0 : transactionSeq;
+      long seq = Objects.isNull(transactionSeq) ? 0 : transactionSeq;
 
       Function function;
       String proxyMethod;
 
       if (Objects.isNull(transactionID) || transactionID.isEmpty() || "0".equals(transactionID)) {
-        proxyMethod = FunctionUtility.ProxySendTXMethod;
         function =
             FunctionUtility.newSendTransactionProxyFunction(
                 functionEncoder,
                 uid,
-                name,
+                contractAddress,
                 abiDefinition.getMethodSignatureAsString(),
                 encodedArgs);
+        proxyMethod = FunctionUtility.ProxySendTXMethod;
       } else {
-        proxyMethod = FunctionUtility.ProxySendTransactionTXMethod;
         function =
             FunctionUtility.newSendTransactionProxyFunction(
                 uid,
                 transactionID,
                 seq,
-                name,
+                contractAddress,
                 abiDefinition.getMethodSignatureAsString(),
                 encodedArgs);
+        proxyMethod = FunctionUtility.ProxySendTransactionTXMethod;
       }
 
-      String proxyParams = functionEncoder.encode(function);
+      if (logger.isDebugEnabled()) {
+        logger.debug(
+            " name:{},callName:{}, address: {}, method: {}, args: {}",
+            name,
+            contractCallName,
+            contractAddress,
+            method,
+            args);
+      }
 
       Map<String, byte[]> params = new HashMap<>();
-      params.put(ChainMakerConstant.CHAIN_MAKER_CONTRACT_ARGS_EVM_PARAM, Hex.decode(proxyParams));
+      params.put(
+          ChainMakerConstant.CHAIN_MAKER_CONTRACT_ARGS_EVM_PARAM,
+          Hex.decode(functionEncoder.encode(function)));
 
-      // FIXME: client chain id
+      ChainClient nativeClient = chainMakerConnection.getClientWrapper().getNativeClient();
       org.chainmaker.pb.common.Request.Payload payload =
           ClientUtility.createPayload(
-              "", contractAddress, functionEncoder.buildMethodId(proxyMethod), params);
-      // FIXME: client user orgId, hash alg
+              nativeClient.getChainId(),
+              proxyContractCallName,
+              functionEncoder.buildMethodId(proxyMethod),
+              params);
+      User clientUser = nativeClient.getClientUser();
       org.chainmaker.pb.common.Request.TxRequest txRequest =
-          ClientUtility.createTxRequest(payload, "", user, "");
+          ClientUtility.createTxRequest(
+              payload, clientUser.getOrgId(), user, nativeClient.getHash());
       TransactionParams transactionParams =
           new TransactionParams(request, objectMapper.writeValueAsBytes(txRequest));
       Request req =
@@ -959,25 +988,33 @@ public class ChainMakerDriver implements Driver {
       Connection connection,
       Callback callback) {
     TransactionResponse transactionResponse = new TransactionResponse();
-    // TODO: check properties
     try {
+      ChainMakerConnection chainMakerConnection = (ChainMakerConnection) connection;
+      Map<String, String> properties = chainMakerConnection.getProperties();
+
+      checkProperties(properties);
+
       Path path = context.getPath();
       String name = path.getResource();
+      // contract client call name
+      String contractCallName = chainMakerConnection.getProperty(name);
+      String contractAbi = chainMakerConnection.getAbi(name);
+      // contract evm call address
+      String contractAddress = chainMakerConnection.getAddress(name);
 
-      // TODO: get Abi by name
-      String abi = ""; // resources abi
-
-      if (abi == null) {
+      if (contractAbi == null) {
         throw new ChainMakerStubException(
             ChainMakerStatusCode.ABINotExist, "resource ABI not exist: " + name);
       }
+
       ChainMakerPublicAccount account = (ChainMakerPublicAccount) context.getAccount();
       User user = account.getUser();
+
       // encode
       String[] args = request.getArgs();
       String method = request.getMethod();
 
-      ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(abi);
+      ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(contractAbi);
       ABIDefinition abiDefinition =
           contractABIDefinition.getFunctions().get(method).stream()
               .filter(function -> function.getInputs().size() == (args == null ? 0 : args.length))
@@ -990,29 +1027,32 @@ public class ChainMakerDriver implements Driver {
       byte[] encodedArgs =
           Hex.decode(
               abiCodec.encodeMethodFromString(
-                  abi, method, args != null ? Arrays.asList(args) : new ArrayList<>()));
+                  contractAbi, method, args != null ? Arrays.asList(args) : new ArrayList<>()));
 
       if (logger.isDebugEnabled()) {
         logger.debug(
-            " name:{}, address: {}, method: {}, args: {}",
+            " name:{},callName:{}, address: {}, method: {}, args: {}",
             name,
-            Utils.calcContractName(name),
-            request.getMethod(),
-            request.getArgs());
+            contractCallName,
+            contractAddress,
+            method,
+            args);
       }
 
       Map<String, byte[]> params = new HashMap<>();
       params.put(ChainMakerConstant.CHAIN_MAKER_CONTRACT_ARGS_EVM_PARAM, encodedArgs);
-      // FIXME: client chain id
+
+      ChainClient nativeClient = chainMakerConnection.getClientWrapper().getNativeClient();
       org.chainmaker.pb.common.Request.Payload payload =
           ClientUtility.createPayload(
-              "",
-              Utils.calcContractName(name),
+              nativeClient.getChainId(),
+              contractCallName,
               functionEncoder.buildMethodId(abiDefinition.getMethodSignatureAsString()),
               params);
-      // FIXME: client user orgId, hash alg
+      User clientUser = nativeClient.getClientUser();
       org.chainmaker.pb.common.Request.TxRequest txRequest =
-          ClientUtility.createTxRequest(payload, "", user, "");
+          ClientUtility.createTxRequest(
+              payload, clientUser.getOrgId(), user, nativeClient.getHash());
       TransactionParams transactionParams =
           new TransactionParams(request, objectMapper.writeValueAsBytes(txRequest));
       Request req =
@@ -1083,6 +1123,21 @@ public class ChainMakerDriver implements Driver {
       logger.warn(" e: ", e);
       callback.onTransactionResponse(
           new TransactionException(ChainMakerStatusCode.UnclassifiedError, e.getMessage()), null);
+    }
+  }
+
+  public void checkProperties(Map<String, String> properties) throws ChainMakerStubException {
+    if (!properties.containsKey(ChainMakerConstant.CHAIN_MAKER_PROXY_NAME)) {
+      throw new ChainMakerStubException(
+          ChainMakerStatusCode.InvalidParameter,
+          "Proxy contract address not found, resource: "
+              + ChainMakerConstant.CHAIN_MAKER_PROXY_NAME);
+    }
+
+    if (!properties.containsKey(ChainMakerConstant.CHAIN_MAKER_PROPERTY_CHAIN_ID)) {
+      throw new ChainMakerStubException(
+          ChainMakerStatusCode.InvalidParameter,
+          "Chain id not found, resource: " + ChainMakerConstant.CHAIN_MAKER_PROPERTY_CHAIN_ID);
     }
   }
 }

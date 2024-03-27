@@ -15,17 +15,17 @@ public interface ClientWrapper {
   ChainClient getNativeClient();
 
   ResultOuterClass.TxResponse invokeContract(
-      String contractName, String method, Map<String, byte[]> params)
+      String contractCallName, String method, Map<String, byte[]> params)
       throws ChainClientException, ChainMakerCryptoSuiteException;
 
   ResultOuterClass.TxResponse sendContractRequest(
-      String contractName, String method, Map<String, byte[]> params, User user)
+      String contractCallName, String method, Map<String, byte[]> params, User user)
       throws ChainMakerCryptoSuiteException, ChainClientException;
 
   ResultOuterClass.TxResponse sendTxRequest(Request.TxRequest signedRequest) throws Exception;
 
   ResultOuterClass.TxResponse queryContract(
-      String contractName, String method, Map<String, byte[]> params)
+      String contractCallName, String method, Map<String, byte[]> params)
       throws ChainClientException, ChainMakerCryptoSuiteException;
 
   ChainmakerBlock.BlockInfo getBlockByHeight(long blockHeight)

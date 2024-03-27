@@ -12,6 +12,7 @@ import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.FunctionReturnDecoder;
 import org.fisco.bcos.sdk.abi.TypeReference;
 import org.fisco.bcos.sdk.abi.Utils;
+import org.fisco.bcos.sdk.abi.datatypes.Address;
 import org.fisco.bcos.sdk.abi.datatypes.DynamicArray;
 import org.fisco.bcos.sdk.abi.datatypes.DynamicBytes;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
@@ -41,18 +42,18 @@ public class FunctionUtility {
   public static final int MethodIDLength = 8;
   public static final int MethodIDWithHexPrefixLength = MethodIDLength + 2;
 
-  public static final String ProxySendTXMethod = "sendTransaction(string,string,bytes)";
+  public static final String ProxySendTXMethod = "sendTransaction(string,address,bytes)";
   public static final String ProxySendTXMethodName = "sendTransaction";
 
   public static final String ProxySendTransactionTXMethod =
-      "sendTransactionWithXa(string,string,uint256,string,string,bytes)";
+      "sendTransactionWithXa(string,string,uint256,address,string,bytes)";
   public static final String ProxySendTransactionTXMethodName = "sendTransactionWithXa";
 
   public static final String ProxyCallWithTransactionIdMethod =
-      "constantCallWithXa(string,string,string,bytes)";
+      "constantCallWithXa(string,address,string,bytes)";
   public static final String ProxyCallWithTransactionIdMethodName = "constantCallWithXa";
 
-  public static final String ProxyCallMethod = "constantCall(string,bytes)";
+  public static final String ProxyCallMethod = "constantCall(address,bytes)";
   public static final String ProxyCallMethodName = "constantCall";
 
   public static final List<TypeReference<?>> abiTypeReferenceOutputs =
@@ -89,18 +90,18 @@ public class FunctionUtility {
    * memory _func, bytes memory _args) public returns (bytes memory)
    *
    * @param id
-   * @param path
+   * @param contractAddress
    * @param methodSignature
    * @param abi
    * @return
    */
   public static Function newConstantCallProxyFunction(
-      String id, String path, String methodSignature, byte[] abi) {
+      String id, String contractAddress, String methodSignature, byte[] abi) {
     return new Function(
         ProxyCallWithTransactionIdMethodName,
         Arrays.asList(
             new Utf8String(id),
-            new Utf8String(path),
+            new Address(contractAddress),
             new Utf8String(methodSignature),
             new DynamicBytes(abi)),
         Collections.emptyList());
@@ -110,13 +111,13 @@ public class FunctionUtility {
    * WeCrossProxy constantCall function constantCall(string memory _name, bytes memory
    * _argsWithMethodId) public returns (bytes memory)
    *
-   * @param name
+   * @param contractAddress
    * @param methodSignature
    * @param abi
    * @return
    */
   public static Function newConstantCallProxyFunction(
-      FunctionEncoder functionEncoder, String name, String methodSignature, byte[] abi)
+      FunctionEncoder functionEncoder, String contractAddress, String methodSignature, byte[] abi)
       throws IOException {
     String methodId = functionEncoder.buildMethodId(methodSignature);
     ByteArrayOutputStream params = new ByteArrayOutputStream();
@@ -126,7 +127,7 @@ public class FunctionUtility {
     }
     return new Function(
         ProxyCallMethodName,
-        Arrays.<Type>asList(new Utf8String(name), new DynamicBytes(params.toByteArray())),
+        Arrays.asList(new Address(contractAddress), new DynamicBytes(params.toByteArray())),
         Collections.emptyList());
   }
 
@@ -138,20 +139,25 @@ public class FunctionUtility {
    * @param uid
    * @param tid
    * @param seq
-   * @param path
+   * @param contractAddress
    * @param methodSignature
    * @param abi
    * @return
    */
   public static Function newSendTransactionProxyFunction(
-      String uid, String tid, long seq, String path, String methodSignature, byte[] abi) {
+      String uid,
+      String tid,
+      long seq,
+      String contractAddress,
+      String methodSignature,
+      byte[] abi) {
     return new Function(
         ProxySendTransactionTXMethodName,
         Arrays.asList(
             new Utf8String(uid),
             new Utf8String(tid),
             new Uint256(seq),
-            new Utf8String(path),
+            new Address(contractAddress),
             new Utf8String(methodSignature),
             new DynamicBytes(abi)),
         Collections.emptyList());
@@ -162,13 +168,17 @@ public class FunctionUtility {
    * bytes memory _argsWithMethodId) public returns (bytes memory)
    *
    * @param uid
-   * @param name
+   * @param contractAddress
    * @param methodSignature
    * @param abi
    * @return
    */
   public static Function newSendTransactionProxyFunction(
-      FunctionEncoder functionEncoder, String uid, String name, String methodSignature, byte[] abi)
+      FunctionEncoder functionEncoder,
+      String uid,
+      String contractAddress,
+      String methodSignature,
+      byte[] abi)
       throws IOException {
     String methodId = functionEncoder.buildMethodId(methodSignature);
     ByteArrayOutputStream params = new ByteArrayOutputStream();
@@ -179,7 +189,9 @@ public class FunctionUtility {
     return new Function(
         ProxySendTXMethodName,
         Arrays.asList(
-            new Utf8String(uid), new Utf8String(name), new DynamicBytes(params.toByteArray())),
+            new Utf8String(uid),
+            new Address(contractAddress),
+            new DynamicBytes(params.toByteArray())),
         Collections.emptyList());
   }
 

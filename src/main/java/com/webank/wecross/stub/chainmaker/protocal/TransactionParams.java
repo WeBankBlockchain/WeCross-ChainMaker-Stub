@@ -5,18 +5,18 @@ import java.util.Map;
 
 public class TransactionParams {
   private TransactionRequest transactionRequest;
-  private String contractName;
+  private String contractCallName;
   private String contractMethodId;
   private Map<String, byte[]> contractMethodParams;
   private byte[] signData;
 
   public TransactionParams(
       TransactionRequest transactionRequest,
-      String contractName,
+      String contractCallName,
       String contractMethodId,
       Map<String, byte[]> contractMethodParams) {
     this.transactionRequest = transactionRequest;
-    this.contractName = contractName;
+    this.contractCallName = contractCallName;
     this.contractMethodId = contractMethodId;
     this.contractMethodParams = contractMethodParams;
   }
@@ -34,12 +34,12 @@ public class TransactionParams {
     this.transactionRequest = transactionRequest;
   }
 
-  public String getContractName() {
-    return contractName;
+  public String getContractCallName() {
+    return contractCallName;
   }
 
-  public void setContractName(String contractName) {
-    this.contractName = contractName;
+  public void setContractCallName(String contractCallName) {
+    this.contractCallName = contractCallName;
   }
 
   public String getContractMethodId() {
@@ -68,7 +68,7 @@ public class TransactionParams {
         + "transactionRequest="
         + transactionRequest
         + ", contractName='"
-        + contractName
+        + contractCallName
         + '\''
         + ", contractMethod='"
         + contractMethodId
